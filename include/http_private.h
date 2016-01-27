@@ -77,12 +77,16 @@ extern "C" {
 		} \
 	} while (0)
 
+static const int _HTTP_DEFAULT_CONNECTION_TIMEOUT = 30;
+static const int _HTTP_DEFAULT_HEADER_SIZE = 1024;
+static const int _MAX_HTTP_TRANSACTIONS_PER_SESSION_NORMAL = 1;
+static const int _MAX_HTTP_TRANSACTIONS_PER_SESSION_PIPE = 5;
+
 typedef struct {
 	struct curl_slist *header_list;
 } __http_header_h;
 
 typedef struct {
-	gchar *proxy_addr;
 	gchar *host_uri;
 	gchar *method;
 	gchar *encoding;
@@ -131,12 +135,20 @@ typedef struct {
 } __http_transaction_h;
 
 typedef struct {
-	GIOChannel* channel;
-	GSource* source;
+	curl_socket_t sockfd;
+	CURL *easy_handle;
 	int action;
+	guint event;
 
+	GIOChannel *channel;
 	__http_session_h *session;
 } __http_socket_info_h;
+
+
+void print_curl_multi_errorCode(CURLMcode code);
+gchar* _get_http_method(http_method_e method);
+http_method_e _get_method(gchar* method);
+gchar* _get_proxy();
 
 #ifdef __cplusplus
  }
