@@ -117,6 +117,26 @@ void transaction_aborted_callback(int reason)
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+int add_http_header(http_transaction_h transaction_handle)
+{
+	http_header_add_field(transaction_handle, "Connection", "close");
+	http_header_add_field(transaction_handle, "Accept-Charset", "ISO-8859-1,UTF-8;q=0.7,*;q=0.7");
+	http_header_add_field(transaction_handle, "Cache-Control", "no-cache");
+	http_header_add_field(transaction_handle, "Accept-Language", "en-us;q=0.3");
+
+	return 0;
+}
+
+int remove_http_header(http_transaction_h transaction_handle)
+{
+	http_header_remove_field(transaction_handle, "Connection");
+	http_header_remove_field(transaction_handle, "Accept-Charset");
+	http_header_remove_field(transaction_handle, "Cache-Control");
+	http_header_remove_field(transaction_handle, "Accept-Language");
+
+	return 0;
+}
+
 http_transaction_h create_http_request(http_session_h session_handle, gchar* host_url, http_transaction_header_cb header_cb, http_transaction_body_cb body_cb, http_transaction_write_cb write_cb,
 							http_transaction_completed_cb completed_cb, http_transaction_aborted_cb aborted_cb)
 {
@@ -129,6 +149,7 @@ http_transaction_h create_http_request(http_session_h session_handle, gchar* hos
 						(http_transaction_aborted_cb)aborted_cb, &transaction_handle);
 
 	http_request_set_uri(transaction_handle, host_url);
+	add_http_header(transaction_handle);
 
 	return transaction_handle;
 }
@@ -145,7 +166,6 @@ int main()
 	http_session_h session_handle = NULL;
 	http_transaction_h transaction_handle1 = NULL;
 	http_transaction_h transaction_handle2 = NULL;
-
 
 	DBG("########################## main:Enter#########################################\n");
 
@@ -164,6 +184,9 @@ int main()
 	submit_http_request(transaction_handle2);
 
 	g_main_loop_run(mainloop);
+
+	remove_http_header(transaction_handle1);
+	remove_http_header(transaction_handle2);
 
 	http_transaction_close(transaction_handle1);
 	transaction_handle1 = NULL;

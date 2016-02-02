@@ -85,6 +85,7 @@ int _transaction_submit(gpointer user_data)
 
 	CURLMcode ret = CURLM_OK;
 	gchar *proxy_addr = NULL;
+	struct curl_slist* header_list = NULL;
 
 	transaction->easy_handle = curl_easy_init();
 
@@ -109,6 +110,10 @@ int _transaction_submit(gpointer user_data)
 
 	if (transaction->interface_name)
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_INTERFACE, transaction->interface_name);
+
+	header_list = _get_header_list(transaction);
+	if (header_list)
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_HTTPHEADER, header_list);
 
 	if (request->encoding)
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_ENCODING, request->encoding);
@@ -226,6 +231,9 @@ API int http_open_transaction(http_session_h http_session, http_method_e method,
 	transaction->request->body = NULL;
 	transaction->request->http_version = HTTP_VERSION_1_1;
 
+	transaction->header->header_list = NULL;
+	transaction->header->hash_table = NULL;
+
 	transaction->thread = NULL;
 
 	*http_transaction = (http_transaction_h)transaction;
@@ -317,7 +325,20 @@ API int http_transaction_close(http_transaction_h http_transaction)
 			free(request);
 		}
 		free(response);
-		free(header);
+
+		if (header) {
+			if (header->header_list != NULL) {
+				curl_slist_free_all(header->header_list);
+				header->header_list = NULL;
+			}
+
+			if (header->hash_table != NULL) {
+				g_hash_table_destroy(header->hash_table);
+				header->hash_table = NULL;
+			}
+
+			free(header);
+		}
 
 		free(transaction);
 		transaction = NULL;

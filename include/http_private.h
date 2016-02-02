@@ -84,6 +84,7 @@ static const int _MAX_HTTP_TRANSACTIONS_PER_SESSION_PIPE = 5;
 
 typedef struct {
 	struct curl_slist *header_list;
+	GHashTable *hash_table;
 } __http_header_h;
 
 typedef struct {
@@ -149,6 +150,7 @@ void print_curl_multi_errorCode(CURLMcode code);
 gchar* _get_http_method(http_method_e method);
 http_method_e _get_method(gchar* method);
 gchar* _get_proxy();
+struct curl_slist* _get_header_list(http_transaction_h http_transaction);
 
 #ifdef __cplusplus
  }
