@@ -417,7 +417,7 @@ int http_transaction_close(http_transaction_h http_transaction);
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
  */
-int http_transaction_set_progress_callbacks(http_transaction_h http_transaction, http_transaction_upload_progress_cb upload_progress_cb,
+int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_upload_progress_cb upload_progress_cb,
 															http_transaction_download_progress_cb download_progress_cb);
 
 /**
@@ -727,6 +727,21 @@ int http_request_set_accept_encoding(http_transaction_h http_transaction, const 
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
  */
 int http_request_get_accept_encoding(http_transaction_h http_transaction, char **encoding);
+
+/**
+ * @internal
+ * @brief Sets the request message body.
+ * @since_tizen 3.0
+ * @privlevel platform
+ * @privilege http://tizen.org/privilege/http.admin
+ * @details Sets the request message body.
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  body  message body data
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ */
+int http_request_write_body(http_transaction_h http_transaction, const char *body);
 
 /**
  * @}

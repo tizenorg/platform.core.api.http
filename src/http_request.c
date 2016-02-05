@@ -145,3 +145,81 @@ API int http_request_get_accept_encoding(http_transaction_h http_transaction, ch
 
 	return HTTP_ERROR_NONE;
 }
+
+API int http_request_write_body(http_transaction_h http_transaction, const char *body)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(body == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(body) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+	__http_request_h *request = transaction->request;
+
+	request->tot_size += strlen(body);
+
+	g_queue_push_tail(request->body_queue, (gpointer)body);
+
+	return HTTP_ERROR_NONE;
+}
+
+int _get_request_body_size(http_transaction_h http_transaction, int *body_size)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(body_size == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(body_size) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+	__http_request_h *request = transaction->request;
+
+	*body_size = request->tot_size;
+
+	return HTTP_ERROR_NONE;
+}
+
+int _read_request_body(http_transaction_h http_transaction, char **body)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(body == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(body) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+	__http_request_h *request = transaction->request;
+
+	int len = 0;
+	int index = 0;
+	int body_size = 0;
+	int curr_len = 0;
+	size_t new_len = 0;
+	gchar* ptr = NULL;
+
+	*body = malloc(curr_len + 1);
+	if (*body == NULL) {
+		DBG("malloc() failed\n");
+		return HTTP_ERROR_OPERATION_FAILED;
+	}
+
+	len = g_queue_get_length(request->body_queue);
+
+	for (index = 0; index < len; index++) {
+
+		ptr = (gchar*)g_queue_pop_head(request->body_queue);
+		body_size = strlen(ptr);
+
+		new_len = curr_len + body_size;
+		*body = realloc(*body, new_len + 1);
+		if (*body == NULL) {
+			DBG("realloc() failed\n");
+			return HTTP_ERROR_OPERATION_FAILED;
+		}
+
+		memcpy(*body + curr_len, ptr, body_size);
+
+		body[new_len] = '\0';
+		curr_len = new_len;
+	}
+
+	return HTTP_ERROR_NONE;
+}
