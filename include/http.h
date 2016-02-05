@@ -729,6 +729,21 @@ int http_request_set_accept_encoding(http_transaction_h http_transaction, const 
 int http_request_get_accept_encoding(http_transaction_h http_transaction, char **encoding);
 
 /**
+ * @internal
+ * @brief Sets the request message body.
+ * @since_tizen 3.0
+ * @privlevel platform
+ * @privilege http://tizen.org/privilege/http.admin
+ * @details Sets the request message body.
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  body  message body data
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ */
+int http_request_write_body(http_transaction_h http_transaction, const char *body);
+
+/**
  * @}
  */
 

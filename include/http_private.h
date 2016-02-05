@@ -91,7 +91,8 @@ typedef struct {
 	gchar *host_uri;
 	gchar *method;
 	gchar *encoding;
-	gchar *body;
+	GQueue* body_queue;
+	gint tot_size;
 	http_version_e http_version;
 } __http_request_h;
 
@@ -113,6 +114,7 @@ typedef struct {
 	CURL *easy_handle;
 	gchar *interface_name;
 	int timeout;
+	int write_event;
 	gchar error[CURL_ERROR_SIZE];
 
 	int socket_fd;
@@ -151,6 +153,9 @@ gchar* _get_http_method(http_method_e method);
 http_method_e _get_method(gchar* method);
 gchar* _get_proxy();
 struct curl_slist* _get_header_list(http_transaction_h http_transaction);
+
+int _get_request_body_size(http_transaction_h http_transaction, int *body_size);
+int _read_request_body(http_transaction_h http_transaction, char **body);
 
 #ifdef __cplusplus
  }

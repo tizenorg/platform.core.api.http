@@ -45,6 +45,25 @@ size_t __handle_body_cb(char *ptr, size_t size, size_t nmemb, gpointer user_data
 	return written;
 }
 
+size_t __handle_write_cb(char *ptr, size_t size, size_t nmemb, gpointer user_data)
+{
+	__http_transaction_h *transaction = (__http_transaction_h *)user_data;
+	__http_request_h *request = transaction->request;
+	size_t recommended_size = size * nmemb;
+	size_t body_size = 0;
+
+	transaction->write_cb(recommended_size);
+
+	ptr = (gchar*)g_queue_pop_head(request->body_queue);
+	if (ptr == NULL) {
+		DBG("Sent the last chunk.\n");
+		return 0;
+	}
+	body_size = strlen(ptr);
+
+	return body_size;
+}
+
 size_t __http_debug_received(CURL* easy_handle, curl_infotype type, char* byte, size_t size, void *user_data)
 {
 	char log_buffer[_HTTP_DEFAULT_HEADER_SIZE];
@@ -86,6 +105,10 @@ int _transaction_submit(gpointer user_data)
 	CURLMcode ret = CURLM_OK;
 	gchar *proxy_addr = NULL;
 	struct curl_slist* header_list = NULL;
+	gchar *field_value = NULL;
+	gboolean write_event = FALSE;
+	gint body_size = 0;
+	gint content_len = 0;
 
 	transaction->easy_handle = curl_easy_init();
 
@@ -143,6 +166,50 @@ int _transaction_submit(gpointer user_data)
 
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_WRITEFUNCTION, __handle_body_cb);
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_WRITEDATA, transaction);
+
+	http_header_get_field_value(transaction, "Content-Length", &field_value);
+	if (field_value) {
+		content_len = atoi(field_value);
+
+		if (content_len > 0) {
+			curl_easy_setopt(transaction->easy_handle, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)(content_len));
+			DBG("Set the Content-Length(%d).", content_len);
+		}
+		else if (content_len == 0) {
+			curl_easy_setopt(transaction->easy_handle, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)(content_len));
+			curl_easy_setopt(transaction->easy_handle, CURLOPT_COPYPOSTFIELDS, NULL);
+			DBG("Set the Content-Length(%d).", content_len);
+		}
+	} else {
+		DBG("The Content-Length is not set.\n");
+	}
+
+	_get_request_body_size(transaction, &body_size);
+
+	if (transaction->write_event) {
+		if (content_len >= 0 && content_len <= body_size) {
+			write_event = FALSE;
+		}
+		else {
+			write_event = TRUE;
+		}
+		DBG("The write_event is %d.\n", write_event);
+	}
+
+	if (!write_event) {
+		gchar *body = NULL;
+
+		_read_request_body(transaction, &body);
+
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_COPYPOSTFIELDS, body);
+		free(body);
+	}
+
+	if (write_event) {
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_POST, 1);
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_READFUNCTION, __handle_write_cb);
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_READDATA, transaction);
+	}
 
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_VERBOSE, 1L);
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_DEBUGFUNCTION, __http_debug_received);
@@ -228,8 +295,9 @@ API int http_open_transaction(http_session_h http_session, http_method_e method,
 	transaction->request->method = _get_http_method(method);
 
 	transaction->request->encoding = NULL;
-	transaction->request->body = NULL;
 	transaction->request->http_version = HTTP_VERSION_1_1;
+
+	transaction->request->body_queue = g_queue_new();
 
 	transaction->header->header_list = NULL;
 	transaction->header->hash_table = NULL;
@@ -317,9 +385,8 @@ API int http_transaction_close(http_transaction_h http_transaction)
 				request->encoding = NULL;
 			}
 
-			if (request->body != NULL) {
-				free(request->body);
-				request->body = NULL;
+			if (request->body_queue != NULL) {
+				g_queue_free(request->body_queue);
 			}
 
 			free(request);
@@ -419,6 +486,18 @@ API int http_transaction_get_interface_name(http_transaction_h http_transaction,
 		ERR("strdup is failed\n");
 		return HTTP_ERROR_OUT_OF_MEMORY;
 	}
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_set_ready_to_write(http_transaction_h http_transaction, bool read_to_write)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	transaction->write_event = read_to_write;
 
 	return HTTP_ERROR_NONE;
 }

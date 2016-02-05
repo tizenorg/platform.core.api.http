@@ -26,10 +26,10 @@ struct curl_slist* _get_header_list(http_transaction_h http_transaction)
 	GHashTableIter iter;
 	gpointer key = NULL;
 	gpointer value = NULL;
-	gint size = 0;
 
-	size = g_hash_table_size(header->hash_table);
-	DBG("Header table Size: %d\n", size);
+	if (!header->hash_table) {
+		return NULL;
+	}
 
 	g_hash_table_iter_init(&iter, header->hash_table);
 
@@ -91,6 +91,11 @@ API int http_header_get_field_value(http_transaction_h http_transaction, const c
 
 	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
 	__http_header_h *header = transaction->header;
+
+	if (header->hash_table == NULL) {
+		*field_value = NULL;
+		return HTTP_ERROR_INVALID_OPERATION;
+	}
 
 	*field_value = g_hash_table_lookup(header->hash_table, field_name);
 
