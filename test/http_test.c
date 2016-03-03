@@ -28,6 +28,29 @@ static GMainLoop *mainloop = NULL;
 FILE* fp1 = NULL;
 FILE* fp2 = NULL;
 
+http_session_h session_handle = NULL;
+http_transaction_h transaction_handle1 = NULL;
+http_transaction_h transaction_handle2 = NULL;
+
+
+void print_response_header(http_transaction_h transaction_handle)
+{
+	char* uri = NULL;
+	char* status_text = NULL;
+	http_status_code_e status_code;
+	http_version_e version;
+
+	DBG("########################## Result #########################################\n");
+
+	http_request_get_uri(transaction_handle, &uri);
+	http_response_get_version(transaction_handle, &version);
+	http_response_get_status_code(transaction_handle, &status_code);
+	http_response_get_status_text(transaction_handle, &status_text);
+
+	DBG("URI(%s) HTTP version (%d) Status Code (%d) Status message (%s)\n", uri, version, status_code, status_text);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////Request 1 Callbacks////////////////////////////////////////////////////////////////////////////
 void transaction_header_cb(char *header, size_t header_len)
@@ -60,6 +83,8 @@ void transaction_write_cb(int recommended_chunk_size)
 void transaction_completed_cb(void)
 {
 	DBG("########################## 1:transaction_completed_cb#########################################\n");
+
+	print_response_header(transaction_handle1);
 
 	fclose(fp1);
 
@@ -105,6 +130,7 @@ void transaction_completed_callback(void)
 {
 	DBG("########################## 2:transaction_completed_callback #########################################\n");
 
+	print_response_header(transaction_handle2);
 	fclose(fp2);
 
 	g_main_loop_quit((GMainLoop*)mainloop);
@@ -120,9 +146,9 @@ void transaction_aborted_callback(int reason)
 int add_http_header(http_transaction_h transaction_handle)
 {
 	http_header_add_field(transaction_handle, "Connection", "close");
-	http_header_add_field(transaction_handle, "Accept-Charset", "ISO-8859-1,UTF-8;q=0.7,*;q=0.7");
-	http_header_add_field(transaction_handle, "Cache-Control", "no-cache");
-	http_header_add_field(transaction_handle, "Accept-Language", "en-us;q=0.3");
+	//http_header_add_field(transaction_handle, "Accept-Charset", "ISO-8859-1,UTF-8;q=0.7,*;q=0.7");
+	//http_header_add_field(transaction_handle, "Cache-Control", "no-cache");
+	//http_header_add_field(transaction_handle, "Accept-Language", "en-us;q=0.3");
 
 	return 0;
 }
@@ -130,9 +156,9 @@ int add_http_header(http_transaction_h transaction_handle)
 int remove_http_header(http_transaction_h transaction_handle)
 {
 	http_header_remove_field(transaction_handle, "Connection");
-	http_header_remove_field(transaction_handle, "Accept-Charset");
-	http_header_remove_field(transaction_handle, "Cache-Control");
-	http_header_remove_field(transaction_handle, "Accept-Language");
+	//http_header_remove_field(transaction_handle, "Accept-Charset");
+	//http_header_remove_field(transaction_handle, "Cache-Control");
+	//http_header_remove_field(transaction_handle, "Accept-Language");
 
 	return 0;
 }
@@ -142,7 +168,7 @@ http_transaction_h create_http_request(http_session_h session_handle, gchar* hos
 {
 	http_transaction_h transaction_handle = NULL;
 
-	http_session_set_auto_redirection(session_handle, TRUE);
+	//http_session_set_auto_redirection(session_handle, TRUE);
 
 	http_open_transaction(session_handle, HTTP_METHOD_GET, (http_transaction_header_cb)header_cb,
 						(http_transaction_body_cb)body_cb, (http_transaction_write_cb)write_cb, (http_transaction_completed_cb)completed_cb,
@@ -163,10 +189,6 @@ int submit_http_request(http_transaction_h transaction_handle)
 
 int main()
 {
-	http_session_h session_handle = NULL;
-	http_transaction_h transaction_handle1 = NULL;
-	http_transaction_h transaction_handle2 = NULL;
-
 	DBG("########################## main:Enter#########################################\n");
 
 	mainloop = g_main_loop_new(NULL, FALSE);
@@ -175,9 +197,9 @@ int main()
 
 	http_create_session(&session_handle, HTTP_SESSION_MODE_NORMAL);
 
-	transaction_handle1 = create_http_request(session_handle, "http://www.google.com", transaction_header_cb, transaction_body_cb,
+	transaction_handle1 = create_http_request(session_handle, "https://www.tizen.org", transaction_header_cb, transaction_body_cb,
 														transaction_write_cb, transaction_completed_cb, transaction_aborted_cb);
-	transaction_handle2 = create_http_request(session_handle, "http://www.ibnlive.com", transaction_header_callback, transaction_body_callback,
+	transaction_handle2 = create_http_request(session_handle, "http://www.naver.com", transaction_header_callback, transaction_body_callback,
 														transaction_write_callback, transaction_completed_callback, transaction_aborted_callback);
 
 	submit_http_request(transaction_handle1);
@@ -191,7 +213,7 @@ int main()
 	http_transaction_close(transaction_handle1);
 	transaction_handle1 = NULL;
 	http_transaction_close(transaction_handle2);
-	transaction_handle1 = NULL;
+	transaction_handle2 = NULL;
 	http_delete_session(session_handle);
 	session_handle = NULL;
 	http_deinit();

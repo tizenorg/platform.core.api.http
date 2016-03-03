@@ -30,6 +30,7 @@ size_t __handle_header_cb(char *buffer, size_t size, size_t nmemb, gpointer user
 	__http_transaction_h *transaction = (__http_transaction_h *)user_data;
 	size_t written = size * nmemb;
 
+	__parse_response_header(buffer, written, user_data);
 	transaction->header_cb(buffer, written);
 
 	return written;
@@ -140,6 +141,9 @@ int _transaction_submit(gpointer user_data)
 
 	if (request->encoding)
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_ENCODING, request->encoding);
+
+	if (request->cookie)
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_COOKIE, request->cookie);
 
 	//The connection timeout is 30s. (default)
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_CONNECTTIMEOUT, _HTTP_DEFAULT_CONNECTION_TIMEOUT);

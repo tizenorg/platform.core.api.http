@@ -77,6 +77,11 @@ extern "C" {
 		} \
 	} while (0)
 
+#define HTTP_PREFIX_LEN 5
+#define HTTP_VERSION_LEN 3
+#define HTTP_STATUS_CODE_LEN 3
+#define HTTP_REASON_PHRASE_LEN 1024
+
 static const int _HTTP_DEFAULT_CONNECTION_TIMEOUT = 30;
 static const int _HTTP_DEFAULT_HEADER_SIZE = 1024;
 static const int _MAX_HTTP_TRANSACTIONS_PER_SESSION_NORMAL = 1;
@@ -91,6 +96,7 @@ typedef struct {
 	gchar *host_uri;
 	gchar *method;
 	gchar *encoding;
+	gchar *cookie;
 	GQueue* body_queue;
 	gint tot_size;
 	http_version_e http_version;
@@ -99,6 +105,7 @@ typedef struct {
 typedef struct {
 	gchar *status_text;
 	http_status_code_e status_code;
+	http_version_e version;
 } __http_response_h;
 
 typedef struct {
@@ -156,6 +163,7 @@ struct curl_slist* _get_header_list(http_transaction_h http_transaction);
 
 int _get_request_body_size(http_transaction_h http_transaction, int *body_size);
 int _read_request_body(http_transaction_h http_transaction, char **body);
+void __parse_response_header(char *buffer, size_t written, gpointer user_data);
 
 #ifdef __cplusplus
  }
