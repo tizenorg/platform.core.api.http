@@ -146,6 +146,40 @@ API int http_request_get_accept_encoding(http_transaction_h http_transaction, ch
 	return HTTP_ERROR_NONE;
 }
 
+API int http_request_set_cookie(http_transaction_h http_transaction, const char* cookie)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(cookie == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(cookie) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+	__http_request_h *request = transaction->request;
+
+	request->cookie = g_strdup(cookie);
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_request_get_cookie(http_transaction_h http_transaction, const char** cookie)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(cookie == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(cookie) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+	__http_request_h *request = transaction->request;
+
+	*cookie = g_strdup(request->cookie);
+	if (*cookie == NULL) {
+			ERR("strdup is failed\n");
+			return HTTP_ERROR_OUT_OF_MEMORY;
+	}
+
+	return HTTP_ERROR_NONE;
+}
+
 API int http_request_write_body(http_transaction_h http_transaction, const char *body)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,

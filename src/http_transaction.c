@@ -30,6 +30,7 @@ size_t __handle_header_cb(char *buffer, size_t size, size_t nmemb, gpointer user
 	__http_transaction_h *transaction = (__http_transaction_h *)user_data;
 	size_t written = size * nmemb;
 
+	__parse_response_header(buffer, written, user_data);
 	transaction->header_cb(buffer, written);
 
 	return written;
@@ -141,6 +142,9 @@ int _transaction_submit(gpointer user_data)
 	if (request->encoding)
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_ENCODING, request->encoding);
 
+	if (request->cookie)
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_COOKIE, request->cookie);
+
 	//The connection timeout is 30s. (default)
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_CONNECTTIMEOUT, _HTTP_DEFAULT_CONNECTION_TIMEOUT);
 
@@ -150,6 +154,19 @@ int _transaction_submit(gpointer user_data)
 		//Set the transaction timeout. The timeout includes connection timeout.
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_LOW_SPEED_LIMIT, 1L);
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_LOW_SPEED_TIME, 30L);
+	}
+
+	if (!transaction->verify_peer) {
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_SSL_VERIFYHOST, 0);
+
+	} else {
+			curl_easy_setopt(transaction->easy_handle, CURLOPT_CAPATH, transaction->ca_path);
+			DBG("CA path is (%s)", transaction->ca_path);
+
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_SSL_VERIFYHOST, 2);
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_SSL_CIPHER_LIST, "HIGH");
 	}
 
 	if (session->auto_redirect) {
@@ -272,6 +289,8 @@ API int http_open_transaction(http_session_h http_session, http_method_e method,
 	transaction->easy_handle = NULL;
 	transaction->interface_name = NULL;
 	transaction->timeout = 0;
+	transaction->verify_peer = 1;
+	transaction->ca_path = g_strdup(HTTP_DEFAULT_CA_PATH);
 	transaction->error[0] = '\0';
 
 	transaction->header_cb = transaction_header_callback;
@@ -295,6 +314,7 @@ API int http_open_transaction(http_session_h http_session, http_method_e method,
 	transaction->request->method = _get_http_method(method);
 
 	transaction->request->encoding = NULL;
+	transaction->request->cookie = NULL;
 	transaction->request->http_version = HTTP_VERSION_1_1;
 
 	transaction->request->body_queue = g_queue_new();
@@ -358,6 +378,8 @@ API int http_transaction_close(http_transaction_h http_transaction)
 		}
 
 		transaction->timeout = 0;
+		transaction->verify_peer = 0;
+		transaction->ca_path = '\0';
 		transaction->error[0] = '\0';
 
 		transaction->header_cb = NULL;
@@ -383,6 +405,11 @@ API int http_transaction_close(http_transaction_h http_transaction)
 			if (request->encoding != NULL) {
 				free(request->encoding);
 				request->encoding = NULL;
+			}
+
+			if (request->cookie != NULL) {
+				free(request->cookie);
+				request->cookie = NULL;
 			}
 
 			if (request->body_queue != NULL) {
@@ -413,6 +440,31 @@ API int http_transaction_close(http_transaction_h http_transaction)
 
 	return HTTP_ERROR_NONE;
 }
+
+API int http_transaction_pause(http_transaction_h http_transaction)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	curl_easy_pause(transaction->easy_handle, CURLPAUSE_ALL);
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_resume(http_transaction_h http_transaction)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	curl_easy_pause(transaction->easy_handle, CURLPAUSE_CONT);
+
+	return HTTP_ERROR_NONE;
+}
+
 
 API int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_upload_progress_cb upload_progress_cb,
 															http_transaction_download_progress_cb download_progress_cb)
@@ -498,6 +550,30 @@ API int http_transaction_set_ready_to_write(http_transaction_h http_transaction,
 	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
 
 	transaction->write_event = read_to_write;
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_get_server_certificate_verification(http_transaction_h http_transaction, bool* verify)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	*verify = transaction->verify_peer;
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_set_server_certificate_verification(http_transaction_h http_transaction, bool verify)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	transaction->verify_peer = verify;
 
 	return HTTP_ERROR_NONE;
 }

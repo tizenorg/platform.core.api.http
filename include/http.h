@@ -556,6 +556,36 @@ int http_transaction_get_interface_name(http_transaction_h http_transaction, cha
 
 /**
  * @internal
+ * @brief Sets the flag to verify a server certificate.
+ * @since_tizen 3.0
+ * @privlevel platform
+ * @privilege http://tizen.org/privilege/http.admin
+ * @details Get the interface name.
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  verify flag to verify a server certificate.
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ */
+int http_transaction_set_server_certificate_verification(http_transaction_h http_transaction, bool verify);
+
+/**
+ * @internal
+ * @brief Gets the flag to verify a server certificate.
+ * @since_tizen 3.0
+ * @privlevel platform
+ * @privilege http://tizen.org/privilege/http.admin
+ * @details Get the interface name.
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[out]  verify flag to verify a server certificate.
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ */
+int http_transaction_get_server_certificate_verification(http_transaction_h http_transaction, bool* verify);
+
+/**
+ * @internal
  * @brief Adds a named field, which is a <@c fieldName, @c fieldValue> pair, to the current instance of Http Transaction.
  * @since_tizen 3.0
  * @privlevel platform
