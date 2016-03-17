@@ -204,7 +204,7 @@ typedef void (*http_transaction_completed_cb)(http_transaction_h transaction, vo
  * @details Called when the http transaction is aborted.
  * @param[in] reason aborted reason code
  */
-typedef void (*http_transaction_aborted_cb)(http_transaction_h transaction, int reason);
+typedef void (*http_transaction_aborted_cb)(http_transaction_h transaction, int reason, void *user_data);
 
 /**
  * @internal
@@ -419,6 +419,8 @@ int http_transaction_set_received_body_cb(http_transaction_h transaction, http_t
 int http_transaction_set_uploaded_cb(http_transaction_h transaction, http_transaction_write_cb write_cb, void* user_data);
 
 int http_transaction_set_completed_cb(http_transaction_h transaction, http_transaction_completed_cb completed_cb, void* user_data);
+
+int http_transaction_set_aborted_cb(http_transaction_h http_transaction, http_transaction_aborted_cb aborted_cb, void* user_data);
 
 int http_transaction_close_all(http_session_h session);
 
