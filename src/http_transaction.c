@@ -276,8 +276,6 @@ void* thread_callback(void *user_data)
 
 	g_main_loop_run(transaction->thread_loop);
 
-	g_main_loop_unref(transaction->thread_loop);
-	transaction->thread_loop = NULL;
 	DBG("thread exited.\n");
 
 	return NULL;
@@ -369,7 +367,7 @@ API int http_transaction_close(http_transaction_h http_transaction)
 		session->active_transaction_count--;
 
 	if (transaction) {
-		g_thread_join(transaction->thread);
+		//g_thread_join(transaction->thread);
 		transaction->thread = NULL;
 
 		if (transaction->easy_handle != NULL) {
@@ -384,7 +382,11 @@ API int http_transaction_close(http_transaction_h http_transaction)
 
 		transaction->timeout = 0;
 		transaction->verify_peer = 0;
-		transaction->ca_path = '\0';
+
+		if (transaction->ca_path) {
+			free(transaction->ca_path);
+			transaction->ca_path = NULL;
+		}
 		transaction->error[0] = '\0';
 
 		transaction->header_cb = NULL;
@@ -437,6 +439,13 @@ API int http_transaction_close(http_transaction_h http_transaction)
 
 			free(header);
 		}
+
+		_remove_transaction_from_list(transaction);
+
+		g_main_loop_quit((GMainLoop*)transaction->thread_loop);
+
+		g_main_loop_unref(transaction->thread_loop);
+		transaction->thread_loop = NULL;
 
 		free(transaction);
 		transaction = NULL;
@@ -550,6 +559,20 @@ API int http_transaction_set_completed_cb(http_transaction_h http_transaction, h
 	return HTTP_ERROR_NONE;
 }
 
+API int http_transaction_set_aborted_cb(http_transaction_h http_transaction, http_transaction_aborted_cb aborted_cb, void* user_data)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(aborted_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(aborted_cb) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	transaction->aborted_cb = aborted_cb;
+	transaction->aborted_user_data = user_data;
+
+	return HTTP_ERROR_NONE;
+}
 
 API int http_transaction_unset_progress_cb(http_transaction_h http_transaction)
 {
