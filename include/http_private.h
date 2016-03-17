@@ -142,6 +142,7 @@ typedef struct {
 	http_transaction_completed_cb completed_cb;
 	void *completed_user_data;
 	http_transaction_aborted_cb aborted_cb;
+	void *aborted_user_data;
 
 	/*Progress Callbacks */
 	http_transaction_upload_progress_cb upload_progress_cb;

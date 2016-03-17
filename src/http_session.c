@@ -39,14 +39,23 @@ void _check_curl_multi_status(gpointer user_data)
 
 			DBG("Completed -%s: result(%d)\n", url, curl_code);
 
-			if (curl_code == CURLE_OK) {
-				transaction->completed_cb(transaction, transaction->completed_user_data);
-			} else {
-
+			switch (curl_code) {
+				case CURLE_OK:
+					if (transaction->completed_cb)
+						transaction->completed_cb(transaction, transaction->completed_user_data);
+					break;
+				case CURLE_COULDNT_RESOLVE_HOST:
+				case CURLE_COULDNT_CONNECT:
+				case CURLE_SSL_CONNECT_ERROR:
+				case CURLE_OPERATION_TIMEDOUT:
+					if (transaction->aborted_cb)
+						transaction->aborted_cb(transaction, (int)curl_code, transaction->aborted_user_data);
+					break;
+				default:
+					break;
 			}
 
 			curl_multi_remove_handle(session->multi_handle, curl_easy);
-			g_main_loop_quit((GMainLoop*)transaction->thread_loop);
 		}
 		message = curl_multi_info_read(session->multi_handle, &count);
 	}
