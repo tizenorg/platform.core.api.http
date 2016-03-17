@@ -208,23 +208,13 @@ typedef void (*http_transaction_aborted_cb)(http_transaction_h transaction, int 
 
 /**
  * @internal
- * @brief Called to notify when the content body of the request message is being uploaded.
- * @since_tizen 3.0
- * @details Called to notify when the content body of the request message is being uploaded.
- * @param[in] currentLength current length of the uploaded data (in bytes)
- * @param[in] totalLength total length of the data (in bytes) to upload
- */
-typedef void (*http_transaction_upload_progress_cb)(long long currentLength, long long totalLength);
-
-/**
- * @internal
  * @brief Called to notify when the content body of the response message is being downloaded.
  * @since_tizen 3.0
  * @details Called to notify when the content body of the response message is being downloaded.
  * @param[in] currentLength current length of the downloaded data (in bytes)
  * @param[in] totalLength total length of the data (in bytes) to download
  */
-typedef void (*http_transaction_download_progress_cb)(long long currentLength, long long totalLength);
+typedef void (*http_transaction_progress_cb)(http_transaction_h transaction, double dltotla, double dlnow, double ultotal, double ulnow, void *user_data);
 
 /**
  * @internal
@@ -243,7 +233,7 @@ typedef void (*http_transaction_download_progress_cb)(long long currentLength, l
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
  */
-int http_init();
+int http_init(void);
 
 /**
  * @internal
@@ -253,7 +243,7 @@ int http_init();
  * @privilege http://tizen.org/privilege/http.admin
  * @details Deinitialize the Http module.
  */
-void http_deinit();
+int http_deinit(void);
 
 /**
  * @}
@@ -420,6 +410,8 @@ int http_transaction_set_uploaded_cb(http_transaction_h transaction, http_transa
 
 int http_transaction_set_completed_cb(http_transaction_h transaction, http_transaction_completed_cb completed_cb, void* user_data);
 
+int http_transaction_set_aborted_cb(http_transaction_h http_transaction, http_transaction_aborted_cb aborted_cb);
+
 int http_transaction_close_all(http_session_h session);
 
 
@@ -437,8 +429,7 @@ int http_transaction_close_all(http_session_h session);
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
  */
-int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_upload_progress_cb upload_progress_cb,
-															http_transaction_download_progress_cb download_progress_cb);
+int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_progress_cb progress_cb, void* user_data);
 
 /**
  * @internal
@@ -777,6 +768,9 @@ int http_request_set_accept_encoding(http_transaction_h http_transaction, const 
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
  */
 int http_request_get_accept_encoding(http_transaction_h http_transaction, char **encoding);
+
+int http_request_set_cookie(http_transaction_h http_transaction, const char *cookie);
+int http_request_get_cookie(http_transaction_h http_transaction, const char **cookie);
 
 /**
  * @internal
