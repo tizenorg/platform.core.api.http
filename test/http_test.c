@@ -113,10 +113,10 @@ void transaction_completed_cb(http_transaction_h transaction_handle, void *user_
 		g_main_loop_quit((GMainLoop*)mainloop);
 }
 
-void transaction_aborted_cb(int reason)
+void transaction_aborted_cb(http_transaction_h transaction_handle, int reason)
 {
 	DBG("########################## transaction_aborted_cb#########################################\n");
-
+	DBG("aborted reason: %d\n", reason);
 }
 
 http_transaction_h create_http_request(http_session_h session_handle, gchar* host_url)
@@ -159,6 +159,7 @@ int main()
 	http_transaction_set_received_body_cb(transaction_handle1, transaction_body_cb, NULL);
 	http_transaction_set_uploaded_cb(transaction_handle1, transaction_write_cb, NULL);
 	http_transaction_set_completed_cb(transaction_handle1, transaction_completed_cb, NULL);
+//	http_transaction_set_aborted_cb(transaction_handle1, transaction_aborted_cb);
 
 	http_transaction_set_received_header_cb(transaction_handle2, transaction_header_cb, NULL);
 	http_transaction_set_received_body_cb(transaction_handle2, transaction_body_cb, NULL);

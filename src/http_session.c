@@ -42,7 +42,7 @@ void _check_curl_multi_status(gpointer user_data)
 			if (curl_code == CURLE_OK) {
 				transaction->completed_cb(transaction, transaction->completed_user_data);
 			} else {
-
+				transaction->aborted_cb(transaction, curl_code);
 			}
 
 			curl_multi_remove_handle(session->multi_handle, curl_easy);
@@ -69,6 +69,7 @@ gboolean timer_expired_callback(gpointer user_data)
 	if (ret == CURLM_OK) {
 		//DBG("CURLM_OK - Called curl_multi_socket_action()\n");
 	} else {
+		ERR("err... %d", ret);
 		print_curl_multi_errorCode(ret);
 	}
 
