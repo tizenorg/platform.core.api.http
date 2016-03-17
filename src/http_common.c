@@ -157,7 +157,9 @@ API int http_init()
 	return HTTP_ERROR_NONE;
 }
 
-API void http_deinit()
+API int http_deinit()
 {
 	curl_global_cleanup();
+
+	return HTTP_ERROR_NONE;
 }

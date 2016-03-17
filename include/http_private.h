@@ -133,19 +133,17 @@ typedef struct {
 
 	int socket_fd;
 	/*Transaction Callbacks and User data*/
+	http_transaction_progress_cb progress_cb;
+	void* progress_user_data;
 	http_transaction_header_cb header_cb;
-	void *header_user_data;
+	void* header_user_data;
 	http_transaction_body_cb body_cb;
-	void *body_user_data;
+	void* body_user_data;
 	http_transaction_write_cb write_cb;
-	void *write_user_data;
+	void* write_user_data;
 	http_transaction_completed_cb completed_cb;
-	void *completed_user_data;
+	void* completed_user_data;
 	http_transaction_aborted_cb aborted_cb;
-
-	/*Progress Callbacks */
-	http_transaction_upload_progress_cb upload_progress_cb;
-	http_transaction_download_progress_cb download_progress_cb;
 
 	__http_session_h *session;
 	__http_request_h *request;
