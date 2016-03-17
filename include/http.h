@@ -83,6 +83,17 @@ typedef enum {
 
 /**
  * @internal
+ * @brief Enumeration for transfer pause state
+ * @since_tizen 3.0
+ */
+typedef enum {
+	HTTP_PAUSE_RECV = 1 << 0,   /**< Pause receiving data */
+	HTTP_PAUSE_SEND = 1 << 2,    /**< Pause sending data */
+	HTTP_PAUSE_ALL =  HTTP_PAUSE_RECV |  HTTP_PAUSE_SEND  /**< %Pause both directions */
+} http_pause_state_e;
+
+/**
+ * @internal
  * @brief Enumeration for the http error code.
  * @since_tizen 3.0
  */
@@ -156,7 +167,7 @@ typedef enum {
  * @param[in]  header  header information of Http Transaction
  * @param[in]  header_len  length of the Http Transaction header
  */
-typedef void (*http_transaction_header_cb)(char *header, size_t header_len);
+typedef void (*http_transaction_header_cb)(http_transaction_h transaction, char *header, size_t header_len, void *user_data);
 
 /**
  * @internal
@@ -167,7 +178,7 @@ typedef void (*http_transaction_header_cb)(char *header, size_t header_len);
  * @param[in]  size		Size in bytes of each element to be written
  * @param[in]  count	Number of elements, each one with a size of size bytes
  */
-typedef void (*http_transaction_body_cb)(char *body, size_t size, size_t count);
+typedef void (*http_transaction_body_cb)(http_transaction_h transaction, char *body, size_t size, size_t count, void *user_data);
 
 /**
  * @internal
@@ -176,7 +187,7 @@ typedef void (*http_transaction_body_cb)(char *body, size_t size, size_t count);
  * @details Called when the http ready to write event is received.
  * @param[in]  recommended_chunk_size  recommended chunk length of the Http transaction
  */
-typedef void (*http_transaction_write_cb)(int recommended_chunk_size);
+typedef void (*http_transaction_write_cb)(http_transaction_h transaction, int recommended_chunk_size, void *user_data);
 
 /**
  * @internal
@@ -184,7 +195,7 @@ typedef void (*http_transaction_write_cb)(int recommended_chunk_size);
  * @since_tizen 3.0
  * @details Called when the http transaction is completed.
  */
-typedef void (*http_transaction_completed_cb)(void);
+typedef void (*http_transaction_completed_cb)(http_transaction_h transaction, void *user_data);
 
 /**
  * @internal
@@ -193,7 +204,7 @@ typedef void (*http_transaction_completed_cb)(void);
  * @details Called when the http transaction is aborted.
  * @param[in] reason aborted reason code
  */
-typedef void (*http_transaction_aborted_cb)(int reason);
+typedef void (*http_transaction_aborted_cb)(http_transaction_h transaction, int reason);
 
 /**
  * @internal
@@ -371,9 +382,7 @@ int http_session_get_max_transaction_count(http_session_h http_session, int *tra
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
  */
-int http_open_transaction(http_session_h http_session, http_method_e method, http_transaction_header_cb transaction_header_callback,
-							http_transaction_body_cb transaction_body_callback, http_transaction_write_cb transaction_write_callback,
-							http_transaction_completed_cb transaction_completed_cb, http_transaction_aborted_cb transaction_aborted_cb, http_transaction_h *http_transaction);
+int http_open_transaction(http_session_h http_session, http_method_e method, http_transaction_h *http_transaction);
 
 /**
  * @internal
@@ -402,6 +411,17 @@ int http_transaction_submit(http_transaction_h http_transaction);
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
  */
 int http_transaction_close(http_transaction_h http_transaction);
+
+int http_transaction_set_received_header_cb(http_transaction_h transaction, http_transaction_header_cb header_cb, void* user_data);
+
+int http_transaction_set_received_body_cb(http_transaction_h transaction, http_transaction_body_cb body_cb, void* user_data);
+
+int http_transaction_set_uploaded_cb(http_transaction_h transaction, http_transaction_write_cb write_cb, void* user_data);
+
+int http_transaction_set_completed_cb(http_transaction_h transaction, http_transaction_completed_cb completed_cb, void* user_data);
+
+int http_transaction_close_all(http_session_h session);
+
 
 /**
  * @internal
@@ -507,7 +527,7 @@ int http_transaction_resume(http_transaction_h http_transaction);
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
  */
-int http_transaction_pause(http_transaction_h http_transaction);
+int http_transaction_pause(http_transaction_h http_transaction, http_pause_state_e pause_state);
 
 /**
  * @internal
@@ -553,6 +573,36 @@ int http_transaction_set_interface_name(http_transaction_h http_transaction, con
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
  */
 int http_transaction_get_interface_name(http_transaction_h http_transaction, char **interface_name);
+
+/**
+ * @internal
+ * @brief Sets the flag to verify a server certificate.
+ * @since_tizen 3.0
+ * @privlevel platform
+ * @privilege http://tizen.org/privilege/http.admin
+ * @details Get the interface name.
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  verify flag to verify a server certificate.
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ */
+int http_transaction_set_server_certificate_verification(http_transaction_h http_transaction, bool verify);
+
+/**
+ * @internal
+ * @brief Gets the flag to verify a server certificate.
+ * @since_tizen 3.0
+ * @privlevel platform
+ * @privilege http://tizen.org/privilege/http.admin
+ * @details Get the interface name.
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[out]  verify flag to verify a server certificate.
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ */
+int http_transaction_get_server_certificate_verification(http_transaction_h http_transaction, bool* verify);
 
 /**
  * @internal

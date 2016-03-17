@@ -146,3 +146,18 @@ CATCH:
 
 	return proxy_addr;
 }
+
+API int http_init()
+{
+	if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
+		DBG("curl_global_init failed, so returning!\n");
+		return HTTP_ERROR_OPERATION_FAILED;
+	}
+
+	return HTTP_ERROR_NONE;
+}
+
+API void http_deinit()
+{
+	curl_global_cleanup();
+}

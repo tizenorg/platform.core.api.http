@@ -33,8 +33,8 @@ struct curl_slist* _get_header_list(http_transaction_h http_transaction)
 
 	g_hash_table_iter_init(&iter, header->hash_table);
 
-	while(g_hash_table_iter_next (&iter, &key, &value)) {
-		header_str = (gchar *)malloc(sizeof(gchar) * (strlen(key) + 1 + 1 + strlen(value) + 1) );
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		header_str = (gchar *)malloc(sizeof(gchar) * (strlen(key) + 1 + 1 + strlen(value) + 1));
 		sprintf(header_str, "%s: %s", (gchar*)key, (gchar*)value);
 		DBG("Header Field: %s\n", header_str);
 		header->header_list = curl_slist_append(header->header_list, header_str);

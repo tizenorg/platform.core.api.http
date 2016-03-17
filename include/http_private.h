@@ -77,6 +77,13 @@ extern "C" {
 		} \
 	} while (0)
 
+#define HTTP_PREFIX_SIZE 5
+#define HTTP_VERSION_SIZE 3
+#define HTTP_STATUS_CODE_SIZE 3
+#define HTTP_REASON_PHRASE_SIZE 1024
+
+#define HTTP_DEFAULT_CA_PATH "/etc/ssl/certs"
+
 static const int _HTTP_DEFAULT_CONNECTION_TIMEOUT = 30;
 static const int _HTTP_DEFAULT_HEADER_SIZE = 1024;
 static const int _MAX_HTTP_TRANSACTIONS_PER_SESSION_NORMAL = 1;
@@ -91,6 +98,7 @@ typedef struct {
 	gchar *host_uri;
 	gchar *method;
 	gchar *encoding;
+	gchar *cookie;
 	GQueue* body_queue;
 	gint tot_size;
 	http_version_e http_version;
@@ -99,10 +107,12 @@ typedef struct {
 typedef struct {
 	gchar *status_text;
 	http_status_code_e status_code;
+	http_version_e version;
 } __http_response_h;
 
 typedef struct {
 	CURLM *multi_handle;
+	int session_id;
 	guint timer_event;
 	int still_running;
 	int active_transaction_count;
@@ -112,18 +122,27 @@ typedef struct {
 
 typedef struct {
 	CURL *easy_handle;
+	int session_id;
+	int transaction_id;
 	gchar *interface_name;
 	int timeout;
 	int write_event;
+	bool verify_peer;
+	gchar *ca_path;
 	gchar error[CURL_ERROR_SIZE];
 
 	int socket_fd;
-	/*Transaction Callbacks */
+	/*Transaction Callbacks and User data*/
 	http_transaction_header_cb header_cb;
+	void *header_user_data;
 	http_transaction_body_cb body_cb;
+	void *body_user_data;
 	http_transaction_write_cb write_cb;
+	void *write_user_data;
 	http_transaction_completed_cb completed_cb;
+	void *completed_user_data;
 	http_transaction_aborted_cb aborted_cb;
+
 	/*Progress Callbacks */
 	http_transaction_upload_progress_cb upload_progress_cb;
 	http_transaction_download_progress_cb download_progress_cb;
@@ -156,6 +175,12 @@ struct curl_slist* _get_header_list(http_transaction_h http_transaction);
 
 int _get_request_body_size(http_transaction_h http_transaction, int *body_size);
 int _read_request_body(http_transaction_h http_transaction, char **body);
+void __parse_response_header(char *buffer, size_t written, gpointer user_data);
+int _generate_session_id(void);
+int _generate_transaction_id(void);
+void _add_transaction_to_list(http_transaction_h http_transaction);
+void _remove_transaction_from_list(http_transaction_h http_transaction);
+void _remove_transaction_list(void);
 
 #ifdef __cplusplus
  }

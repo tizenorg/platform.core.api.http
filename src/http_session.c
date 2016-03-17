@@ -40,7 +40,7 @@ void _check_curl_multi_status(gpointer user_data)
 			DBG("Completed -%s: result(%d)\n", url, curl_code);
 
 			if (curl_code == CURLE_OK) {
-				transaction->completed_cb();
+				transaction->completed_cb(transaction, transaction->completed_user_data);
 			} else {
 
 			}
@@ -50,6 +50,13 @@ void _check_curl_multi_status(gpointer user_data)
 		}
 		message = curl_multi_info_read(session->multi_handle, &count);
 	}
+}
+
+int _generate_session_id(void)
+{
+	int session_id = 0;
+
+	return session_id;
 }
 
 gboolean timer_expired_callback(gpointer user_data)
@@ -81,8 +88,7 @@ gboolean _handle_event(int fd, int action, gpointer user_data)
 	ret = curl_multi_socket_action(session->multi_handle, fd, action, &running_handles);
 	if (ret == CURLM_OK) {
 		//DBG("CURLM_OK: Called curl_multi_socket_action(%d)\n", action);
-	}
-	else {
+	} else {
 		print_curl_multi_errorCode(ret);
 	}
 
@@ -142,7 +148,7 @@ static void _remove_socket_info(__http_socket_info_h *sock_info)
 static void _set_socket_info(__http_socket_info_h *sock_info, curl_socket_t fd, CURL *curl_easy, int action, void *user_data)
 {
 	__http_session_h *session = (__http_session_h *)user_data;
-	GIOCondition condition = (action & CURL_POLL_IN ? G_IO_IN : 0) | (action & CURL_POLL_OUT ? G_IO_OUT: 0);
+	GIOCondition condition = (action & CURL_POLL_IN ? G_IO_IN : 0) | (action & CURL_POLL_OUT ? G_IO_OUT : 0);
 
 	sock_info->sockfd = fd;
 	sock_info->action = action;
@@ -172,7 +178,7 @@ int __handle_socket_cb(CURL *curl_easy, curl_socket_t fd, int action, void *user
 	__http_session_h *session = (__http_session_h *)user_data;
 	__http_socket_info_h *sock_info = (__http_socket_info_h*) socketp;
 
-	static const char *actionstr[]={ "none", "IN", "OUT", "INOUT", "REMOVE"};
+	static const char *actionstr[] = { "none", "IN", "OUT", "INOUT", "REMOVE"};
 
 	DBG("__handle_socket_cb: fd=%d easy_handle=%p action=%s ", fd, curl_easy, actionstr[action]);
 	if (action == CURL_POLL_REMOVE) {
@@ -180,10 +186,9 @@ int __handle_socket_cb(CURL *curl_easy, curl_socket_t fd, int action, void *user
 		_remove_socket_info(sock_info);
 	} else {
 		if (!sock_info) {
-			DBG("Adding data: %s%s\n", action & CURL_POLL_IN ? "READ":"", action & CURL_POLL_OUT ? "WRITE":"" );
+			DBG("Adding data: %s%s\n", action & CURL_POLL_IN ? "READ" : "", action & CURL_POLL_OUT ? "WRITE" : "");
 			_add_socket_info(fd, curl_easy, action, session);
-		}
-		else {
+		} else {
 			DBG("Changing action from %d to %d\n", sock_info->action, action);
 			_set_socket_info(sock_info, fd, curl_easy, action, session);
 		}
@@ -201,21 +206,6 @@ int __handle_timer_cb(CURLM *curl_multi, long timeout_ms, void *user_data)
 	return 0;
 }
 
-API int http_init()
-{
-	if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
-		DBG("curl_global_init failed, so returning!\n");
-		return HTTP_ERROR_OPERATION_FAILED;
-	}
-
-	return HTTP_ERROR_NONE;
-}
-
-API void http_deinit()
-{
-	curl_global_cleanup();
-}
-
 API int http_create_session(http_session_h *http_session, http_session_mode_e mode)
 {
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -226,6 +216,7 @@ API int http_create_session(http_session_h *http_session, http_session_mode_e mo
 	session = (__http_session_h *)malloc(sizeof(__http_session_h));
 
 	session->multi_handle = curl_multi_init();
+	session->session_id = _generate_session_id();
 	session->active_transaction_count = 0;
 	session->session_mode = mode;
 	session->auto_redirect = FALSE;

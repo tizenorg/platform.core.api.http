@@ -17,6 +17,32 @@
 #include "http.h"
 #include "http_private.h"
 
+static __thread GSList *transaction_list = NULL;
+
+void _add_transaction_to_list(http_transaction_h http_transaction)
+{
+	transaction_list = g_slist_append(transaction_list, http_transaction);
+}
+
+void _remove_transaction_from_list(http_transaction_h http_transaction)
+{
+	transaction_list = g_slist_remove(transaction_list, http_transaction);
+	//g_free(http_transaction);
+}
+
+void _remove_transaction_list(void)
+{
+	g_slist_free_full(transaction_list, g_free);
+	transaction_list = NULL;
+}
+
+int _generate_transaction_id(void)
+{
+	int transaction_id = 0;
+
+	return transaction_id;
+}
+
 curl_socket_t __handle_opensocket_cb(void *client_fd, curlsocktype purpose, struct curl_sockaddr *address)
 {
 	int fd = socket(address->family, address->socktype, address->protocol);
@@ -30,7 +56,8 @@ size_t __handle_header_cb(char *buffer, size_t size, size_t nmemb, gpointer user
 	__http_transaction_h *transaction = (__http_transaction_h *)user_data;
 	size_t written = size * nmemb;
 
-	transaction->header_cb(buffer, written);
+	__parse_response_header(buffer, written, user_data);
+	transaction->header_cb(transaction, buffer, written, transaction->header_user_data);
 
 	return written;
 }
@@ -40,7 +67,7 @@ size_t __handle_body_cb(char *ptr, size_t size, size_t nmemb, gpointer user_data
 	__http_transaction_h *transaction = (__http_transaction_h *)user_data;
 	size_t written = size * nmemb;
 
-	transaction->body_cb(ptr, size, nmemb);
+	transaction->body_cb(transaction, ptr, size, nmemb, transaction->body_user_data);
 
 	return written;
 }
@@ -52,7 +79,7 @@ size_t __handle_write_cb(char *ptr, size_t size, size_t nmemb, gpointer user_dat
 	size_t recommended_size = size * nmemb;
 	size_t body_size = 0;
 
-	transaction->write_cb(recommended_size);
+	transaction->write_cb(transaction, recommended_size, transaction->write_user_data);
 
 	ptr = (gchar*)g_queue_pop_head(request->body_queue);
 	if (ptr == NULL) {
@@ -69,24 +96,20 @@ size_t __http_debug_received(CURL* easy_handle, curl_infotype type, char* byte, 
 	char log_buffer[_HTTP_DEFAULT_HEADER_SIZE];
 	int log_size = 0;
 
-	if (_HTTP_DEFAULT_HEADER_SIZE > size) {
+	if (_HTTP_DEFAULT_HEADER_SIZE > size)
 		log_size = size;
-	}
-	else {
+	else
 		log_size = _HTTP_DEFAULT_HEADER_SIZE - 1;
-	}
 
 	if (type == CURLINFO_TEXT) {
 		strncpy(log_buffer, byte, log_size);
 		log_buffer[log_size] = '\0';
 		DBG("[DEBUG] %s", log_buffer);
-	}
-	else if (type == CURLINFO_HEADER_IN || type == CURLINFO_HEADER_OUT) {
-		//Ignore the body message.
+	} else if (type == CURLINFO_HEADER_IN || type == CURLINFO_HEADER_OUT) {
+		/* Ignore the body message. */
 		if (size >= 2 && byte[0] == 0x0D && byte[1] == 0x0A) {
 			return 0;
-		}
-		else {
+		} else {
 			strncpy(log_buffer, byte, log_size);
 			log_buffer[log_size] = '\0';
 			DBG("[DEBUG] %s", log_buffer);
@@ -112,11 +135,10 @@ int _transaction_submit(gpointer user_data)
 
 	transaction->easy_handle = curl_easy_init();
 
-	if (request->http_version == HTTP_VERSION_1_0) {
+	if (request->http_version == HTTP_VERSION_1_0)
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
-	} else {
+	else
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-	}
 
 	if (request->host_uri)
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_URL, request->host_uri);
@@ -141,6 +163,9 @@ int _transaction_submit(gpointer user_data)
 	if (request->encoding)
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_ENCODING, request->encoding);
 
+	if (request->cookie)
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_COOKIE, request->cookie);
+
 	//The connection timeout is 30s. (default)
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_CONNECTTIMEOUT, _HTTP_DEFAULT_CONNECTION_TIMEOUT);
 
@@ -150,6 +175,19 @@ int _transaction_submit(gpointer user_data)
 		//Set the transaction timeout. The timeout includes connection timeout.
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_LOW_SPEED_LIMIT, 1L);
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_LOW_SPEED_TIME, 30L);
+	}
+
+	if (!transaction->verify_peer) {
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_SSL_VERIFYHOST, 0);
+
+	} else {
+			curl_easy_setopt(transaction->easy_handle, CURLOPT_CAPATH, transaction->ca_path);
+			DBG("CA path is (%s)", transaction->ca_path);
+
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_SSL_VERIFYHOST, 2);
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_SSL_CIPHER_LIST, "HIGH");
 	}
 
 	if (session->auto_redirect) {
@@ -174,8 +212,7 @@ int _transaction_submit(gpointer user_data)
 		if (content_len > 0) {
 			curl_easy_setopt(transaction->easy_handle, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)(content_len));
 			DBG("Set the Content-Length(%d).", content_len);
-		}
-		else if (content_len == 0) {
+		} else if (content_len == 0) {
 			curl_easy_setopt(transaction->easy_handle, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)(content_len));
 			curl_easy_setopt(transaction->easy_handle, CURLOPT_COPYPOSTFIELDS, NULL);
 			DBG("Set the Content-Length(%d).", content_len);
@@ -187,12 +224,10 @@ int _transaction_submit(gpointer user_data)
 	_get_request_body_size(transaction, &body_size);
 
 	if (transaction->write_event) {
-		if (content_len >= 0 && content_len <= body_size) {
+		if (content_len >= 0 && content_len <= body_size)
 			write_event = FALSE;
-		}
-		else {
+		else
 			write_event = TRUE;
-		}
 		DBG("The write_event is %d.\n", write_event);
 	}
 
@@ -248,55 +283,45 @@ void* thread_callback(void *user_data)
 	return NULL;
 }
 
-API int http_open_transaction(http_session_h http_session, http_method_e method, http_transaction_header_cb transaction_header_callback,
-							http_transaction_body_cb transaction_body_callback, http_transaction_write_cb transaction_write_callback,
-							http_transaction_completed_cb transaction_completed_cb, http_transaction_aborted_cb transaction_aborted_cb, http_transaction_h *http_transaction)
+API int http_open_transaction(http_session_h http_session, http_method_e method, http_transaction_h *http_transaction)
 {
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
-	_retvm_if(transaction_header_callback == NULL, HTTP_ERROR_INVALID_PARAMETER,
-			"parameter(transaction_header_callback) is NULL\n");
-	_retvm_if(transaction_body_callback == NULL, HTTP_ERROR_INVALID_PARAMETER,
-			"parameter(transaction_body_callback) is NULL\n");
-	_retvm_if(transaction_write_callback == NULL, HTTP_ERROR_INVALID_PARAMETER,
-			"parameter(transaction_write_callback) is NULL\n");
-	_retvm_if(transaction_completed_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
-			"parameter(transaction_completed_cb) is NULL\n");
-	_retvm_if(transaction_aborted_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
-			"parameter(transaction_aborted_cb) is NULL\n");
 
 	__http_transaction_h *transaction = NULL;
 
-	transaction = (__http_transaction_h *)malloc(sizeof(__http_transaction_h));
+	DBG("[Seonah] + ");
 
+	transaction = (__http_transaction_h *)malloc(sizeof(__http_transaction_h));
 	transaction->easy_handle = NULL;
 	transaction->interface_name = NULL;
 	transaction->timeout = 0;
+	transaction->verify_peer = 1;
+	transaction->ca_path = g_strdup(HTTP_DEFAULT_CA_PATH);
 	transaction->error[0] = '\0';
 
-	transaction->header_cb = transaction_header_callback;
-	transaction->body_cb = transaction_body_callback;
-	transaction->write_cb = transaction_write_callback;
-	transaction->completed_cb = transaction_completed_cb;
-	transaction->aborted_cb = transaction_aborted_cb;
+	transaction->header_cb = NULL;
+	transaction->body_cb = NULL;
+	transaction->write_cb = NULL;
+	transaction->completed_cb = NULL;
+	transaction->aborted_cb = NULL;
 
 	transaction->upload_progress_cb = NULL;
 	transaction->download_progress_cb = NULL;
 
 	transaction->session = http_session;
 	transaction->session->active_transaction_count++;
+	transaction->session_id = 0;
 
 	transaction->request = (__http_request_h *)malloc(sizeof(__http_request_h));
 	transaction->response = (__http_response_h *)malloc(sizeof(__http_response_h));
 	transaction->header = (__http_header_h *)malloc(sizeof(__http_header_h));
 
 	transaction->request->host_uri = NULL;
-
 	transaction->request->method = _get_http_method(method);
-
 	transaction->request->encoding = NULL;
+	transaction->request->cookie = NULL;
 	transaction->request->http_version = HTTP_VERSION_1_1;
-
 	transaction->request->body_queue = g_queue_new();
 
 	transaction->header->header_list = NULL;
@@ -305,7 +330,9 @@ API int http_open_transaction(http_session_h http_session, http_method_e method,
 	transaction->thread = NULL;
 
 	*http_transaction = (http_transaction_h)transaction;
+	_add_transaction_to_list(transaction);
 
+	DBG("[Seonah] - ");
 	return HTTP_ERROR_NONE;
 }
 
@@ -338,12 +365,10 @@ API int http_transaction_close(http_transaction_h http_transaction)
 	response = transaction->response;
 	header = transaction->header;
 
-	if (session) {
+	if (session)
 		session->active_transaction_count--;
-	}
 
 	if (transaction) {
-
 		g_thread_join(transaction->thread);
 		transaction->thread = NULL;
 
@@ -358,6 +383,8 @@ API int http_transaction_close(http_transaction_h http_transaction)
 		}
 
 		transaction->timeout = 0;
+		transaction->verify_peer = 0;
+		transaction->ca_path = '\0';
 		transaction->error[0] = '\0';
 
 		transaction->header_cb = NULL;
@@ -385,9 +412,13 @@ API int http_transaction_close(http_transaction_h http_transaction)
 				request->encoding = NULL;
 			}
 
-			if (request->body_queue != NULL) {
-				g_queue_free(request->body_queue);
+			if (request->cookie != NULL) {
+				free(request->cookie);
+				request->cookie = NULL;
 			}
+
+			if (request->body_queue != NULL)
+				g_queue_free(request->body_queue);
 
 			free(request);
 		}
@@ -414,6 +445,33 @@ API int http_transaction_close(http_transaction_h http_transaction)
 	return HTTP_ERROR_NONE;
 }
 
+API int http_transaction_pause(http_transaction_h http_transaction, http_pause_state_e pause_state)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(pause_state < HTTP_PAUSE_RECV || pause_state > HTTP_PAUSE_ALL, HTTP_ERROR_INVALID_PARAMETER,
+				"Wrong pause state \n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	curl_easy_pause(transaction->easy_handle, pause_state);
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_resume(http_transaction_h http_transaction)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	curl_easy_pause(transaction->easy_handle, CURLPAUSE_CONT);
+
+	return HTTP_ERROR_NONE;
+}
+
+
 API int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_upload_progress_cb upload_progress_cb,
 															http_transaction_download_progress_cb download_progress_cb)
 {
@@ -428,6 +486,80 @@ API int http_transaction_set_progress_cb(http_transaction_h http_transaction, ht
 
 	transaction->upload_progress_cb = upload_progress_cb;
 	transaction->download_progress_cb = download_progress_cb;
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_set_received_header_cb(http_transaction_h http_transaction, http_transaction_header_cb header_cb, void* user_data)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(header_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(header_cb) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	transaction->header_cb = header_cb;
+	transaction->header_user_data = user_data;
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_set_received_body_cb(http_transaction_h http_transaction, http_transaction_body_cb body_cb, void* user_data)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(body_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(body_cb) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	transaction->body_cb = body_cb;
+	transaction->body_user_data = user_data;
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_set_uploaded_cb(http_transaction_h http_transaction, http_transaction_write_cb write_cb, void* user_data)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(write_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(write_cb) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	transaction->write_cb = write_cb;
+	transaction->write_user_data = user_data;
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_set_completed_cb(http_transaction_h http_transaction, http_transaction_completed_cb completed_cb, void* user_data)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(completed_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(completed_cb) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	transaction->completed_cb = completed_cb;
+	transaction->completed_user_data = user_data;
+
+	return HTTP_ERROR_NONE;
+}
+
+
+API int http_transaction_unset_progress_cb(http_transaction_h http_transaction)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	transaction->upload_progress_cb = NULL;
+	transaction->download_progress_cb = NULL;
 
 	return HTTP_ERROR_NONE;
 }
@@ -501,3 +633,50 @@ API int http_transaction_set_ready_to_write(http_transaction_h http_transaction,
 
 	return HTTP_ERROR_NONE;
 }
+
+API int http_transaction_get_server_certificate_verification(http_transaction_h http_transaction, bool* verify)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	*verify = transaction->verify_peer;
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_set_server_certificate_verification(http_transaction_h http_transaction, bool verify)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	transaction->verify_peer = verify;
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_close_all(http_session_h http_session)
+{
+	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_session) is NULL\n");
+
+	GSList *list = NULL;
+	__http_session_h *session = (__http_session_h *)http_session;
+
+	for (list = transaction_list; list; list = list->next) {
+		__http_transaction_h *transaction = (__http_transaction_h *)list->data;
+		if (session->session_id == transaction->session_id) {
+			DBG("[Seonah]Close.. (%p)", list->data);
+			_remove_transaction_from_list(list->data);
+			DBG("[Seonah]Close..1");
+			http_transaction_close((http_transaction_h) transaction);
+			DBG("[Seonah]Close..11");
+		}
+	}
+
+	return HTTP_ERROR_NONE;
+}
+
