@@ -24,20 +24,29 @@
 extern "C" {
 #endif
 
+#ifndef TIZEN_ERROR_HTTP
+#define TIZEN_ERROR_HTTP -0x03000000
+#endif
+
 /**
  * @file http.h
  */
 
 /**
- * @addtogroup CAPI_NETWORK_HTTP_MANAGER_MODULE
+ * @addtogroup CAPI_NETWORK_HTTP_MODULE
  * @{
  */
 
 /**
- * @brief The Http handle.
+ * @brief The HTTP Session handle.
  * @since_tizen 3.0
  */
 typedef void * http_session_h;
+
+/**
+  * @brief The HTTP Transaction handle.
+  * @since_tizen 3.0
+  */
 typedef void * http_transaction_h;
 
 /**
@@ -45,7 +54,11 @@ typedef void * http_transaction_h;
  */
 
 /**
- * @internal
+  * @addtogroup CAPI_NETWORK_HTTP_SESSION_MODULE
+  * @{
+  */
+
+/**
  * @brief Enumeration for the http session.
  * @since_tizen 3.0
  */
@@ -55,7 +68,15 @@ typedef enum {
 } http_session_mode_e;
 
 /**
- * @internal
+  * @}
+  */
+
+/**
+* @addtogroup CAPI_NETWORK_HTTP_MODULE
+* @{
+*/
+
+/**
  * @brief Enumeration for the http method.
  * @since_tizen 3.0
  */
@@ -72,28 +93,25 @@ typedef enum {
 } http_method_e;
 
 /**
- * @internal
  * @brief Enumeration for the http version.
  * @since_tizen 3.0
  */
 typedef enum {
-	HTTP_VERSION_1_0,   /**< %Http version 1.0 */
-	HTTP_VERSION_1_1    /**< %Http version 1.1 */
+	HTTP_VERSION_1_0,   /**< HTTP version 1.0 */
+	HTTP_VERSION_1_1    /**< HTTP version 1.1 */
 } http_version_e;
 
 /**
- * @internal
  * @brief Enumeration for transfer pause state
  * @since_tizen 3.0
  */
 typedef enum {
 	HTTP_PAUSE_RECV = 1 << 0,   /**< Pause receiving data */
 	HTTP_PAUSE_SEND = 1 << 2,    /**< Pause sending data */
-	HTTP_PAUSE_ALL =  HTTP_PAUSE_RECV |  HTTP_PAUSE_SEND  /**< %Pause both directions */
+	HTTP_PAUSE_ALL =  HTTP_PAUSE_RECV |  HTTP_PAUSE_SEND  /**< Pause both directions */
 } http_pause_state_e;
 
 /**
- * @internal
  * @brief Enumeration for the http error code.
  * @since_tizen 3.0
  */
@@ -103,15 +121,14 @@ typedef enum {
     HTTP_ERROR_INVALID_PARAMETER = TIZEN_ERROR_INVALID_PARAMETER,  /**< Invalid parameter */
     HTTP_ERROR_OUT_OF_MEMORY = TIZEN_ERROR_OUT_OF_MEMORY,  /**< Out of memory */
     HTTP_ERROR_RESOURCE_BUSY = TIZEN_ERROR_RESOURCE_BUSY,  /**< Resource busy */
-    HTTP_ERROR_NOT_ENABLED =  0x0501,  /**< Not enabled */
-    HTTP_ERROR_OPERATION_FAILED = 0x0502,  /**< Operation failed */
+    HTTP_ERROR_NOT_ENABLED =  TIZEN_ERROR_HTTP|0x0501,  /**< Not enabled */
+    HTTP_ERROR_OPERATION_FAILED = TIZEN_ERROR_HTTP|0x0502,  /**< Operation failed */
     HTTP_ERROR_INVALID_OPERATION = TIZEN_ERROR_INVALID_OPERATION, /**< Invalid operation */
     HTTP_ERROR_NOT_SUPPORTED = TIZEN_ERROR_NOT_SUPPORTED, /**< API is not supported */
     HTTP_ERROR_PERMISSION_DENIED = TIZEN_ERROR_PERMISSION_DENIED,  /**< Permission denied */
 } http_error_code_e;
 
 /**
- * @internal
  * @brief Enumeration for the http status code.
  * @since_tizen 3.0
  */
@@ -160,695 +177,664 @@ typedef enum {
 } http_status_code_e;
 
 /**
- * @internal
  * @brief Called when the http header is received.
  * @since_tizen 3.0
- * @details Called when the http header is received.
- * @param[in]  header  header information of Http Transaction
- * @param[in]  header_len  length of the Http Transaction header
+ * @param[in]  http_transaction The http transaction handle
+ * @param[in]  header  			The header information of Http Transaction
+ * @param[in]  header_len  		The length of the Http Transaction header
+ * @param[in]  user_data  		The user data
+ * @see http_transaction_set_received_header_cb()
  */
-typedef void (*http_transaction_header_cb)(http_transaction_h transaction, char *header, size_t header_len, void *user_data);
+typedef void (*http_transaction_header_cb)(http_transaction_h http_transaction, char *header, size_t header_len, void *user_data);
 
 /**
- * @internal
  * @brief Called when the http response is received.
  * @since_tizen 3.0
- * @details Called when the http response is received.
- * @param[in]  body		response information of Http Transaction
- * @param[in]  size		Size in bytes of each element to be written
- * @param[in]  count	Number of elements, each one with a size of size bytes
+ * @param[in]  http_transaction	The http transaction handle
+ * @param[in]  body				Response information of Http Transaction
+ * @param[in]  size				Size in bytes of each element to be written
+ * @param[in]  count			Number of elements, each one with a size of size bytes
+ * @param[in]  user_data  		The user data
+ * @see http_transaction_set_received_body_cb()
  */
-typedef void (*http_transaction_body_cb)(http_transaction_h transaction, char *body, size_t size, size_t count, void *user_data);
+typedef void (*http_transaction_body_cb)(http_transaction_h http_transaction, char *body, size_t size, size_t count, void *user_data);
 
 /**
- * @internal
  * @brief Called when the http ready to write event is received.
  * @since_tizen 3.0
- * @details Called when the http ready to write event is received.
- * @param[in]  recommended_chunk_size  recommended chunk length of the Http transaction
+ * @param[in]  http_transaction			The http transaction handle
+ * @param[in]  recommended_chunk_size 	Recommended chunk length of the Http transaction
+ * @param[in]  user_data				The user data
+ * @see http_transaction_set_uploaded_cb()
  */
-typedef void (*http_transaction_write_cb)(http_transaction_h transaction, int recommended_chunk_size, void *user_data);
+typedef void (*http_transaction_write_cb)(http_transaction_h http_transaction, int recommended_chunk_size, void *user_data);
 
 /**
- * @internal
  * @brief Called when the http transaction is completed.
  * @since_tizen 3.0
- * @details Called when the http transaction is completed.
+ * @param[in]  http_transaction	The http transaction handle
+ * @param[in]  user_data		The user data
+ * @see http_transaction_set_completed_cb()
  */
-typedef void (*http_transaction_completed_cb)(http_transaction_h transaction, void *user_data);
+typedef void (*http_transaction_completed_cb)(http_transaction_h http_transaction, void *user_data);
 
 /**
- * @internal
  * @brief Called when the http transaction is aborted.
  * @since_tizen 3.0
- * @details Called when the http transaction is aborted.
- * @param[in] reason aborted reason code
+ * @param[in]  http_transaction	The http transaction handle
+ * @param[in]  reason			Aborted reason code
+ * @param[in]  user_data	 	The user data
+ * @see http_transaction_set_aborted_cb()
  */
-typedef void (*http_transaction_aborted_cb)(http_transaction_h transaction, int reason, void *user_data);
+typedef void (*http_transaction_aborted_cb)(http_transaction_h http_transaction, int reason, void *user_data);
 
 /**
- * @internal
- * @brief Called to notify when the content body of the request message is being uploaded.
+ * @brief Called to notify when the content body of the response message is being downloaded or uploaded.
  * @since_tizen 3.0
- * @details Called to notify when the content body of the request message is being uploaded.
- * @param[in] currentLength current length of the uploaded data (in bytes)
- * @param[in] totalLength total length of the data (in bytes) to upload
+ * @param[in]  http_transaction		The http transaction handle
+ * @param[in]  download_total		The total length of the data (in bytes) to download
+ * @param[in]  download_now			The current length of the downloaded data (in bytes)
+ * @param[in]  upload_total			The total length of the data (in bytes) to upload
+ * @param[in]  upload_now			The current length of the uploaded data (in bytes)
+ * @param[in]  user_data			The user data
+ * @see http_transaction_set_progress_cb()
  */
-typedef void (*http_transaction_upload_progress_cb)(long long currentLength, long long totalLength);
+typedef void (*http_transaction_progress_cb)(http_transaction_h http_transaction, double download_total, double download_now, double upload_total, double upload_now, void *user_data);
 
 /**
- * @internal
- * @brief Called to notify when the content body of the response message is being downloaded.
+ * @brief Initializes the Http module.
  * @since_tizen 3.0
- * @details Called to notify when the content body of the response message is being downloaded.
- * @param[in] currentLength current length of the downloaded data (in bytes)
- * @param[in] totalLength total length of the data (in bytes) to download
- */
-typedef void (*http_transaction_download_progress_cb)(long long currentLength, long long totalLength);
-
-/**
- * @internal
- * @addtogroup CAPI_NETWORK_HTTP_MODULE
- * @{
- */
-
-/**
- * @internal
- * @brief Initialize the Http module.
- * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Initialize the Http module.
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/internet
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
- * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_OPERATION_FAILED Operation failed
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ * @retval  #HTTP_ERROR_PERMISSION_DENIED Permission denied
+ * @see		http_deinit()
  */
-int http_init();
+int http_init(void);
 
 /**
- * @internal
- * @brief Deinitialize the Http module.
+ * @brief Deinitializes the Http module.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Deinitialize the Http module.
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ * @retval  #HTTP_ERROR_OPERATION_FAILED Operation failed
+ * @see		http_init()
  */
-void http_deinit();
+int http_deinit(void);
 
 /**
  * @}
  */
 
 /**
- * @internal
  * @addtogroup CAPI_NETWORK_HTTP_SESSION_MODULE
  * @{
  */
 
 /**
- * @internal
- * @brief Create the Http Session.
+ * @brief Creates the Http session handle.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Create the Http Session.
- * @param[out]  http_session  http session handle
- * @param[in]  mode  http session mode
+ * @remarks The @a http_session should be released using http_session_destroy().
+ * @param[in]   mode            The http session mode
+ * @param[out]  http_session	The http session handle
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ * @see 	http_session_destroy()
  */
-int http_create_session(http_session_h *http_session, http_session_mode_e mode);
+int http_session_create(http_session_mode_e mode, http_session_h *http_session);
 
 /**
- * @internal
- * @brief Delete the Http Session.
+ * @brief Destroys the Http session handle.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Delete the Http Session.
- * @param[in]  http_session  http session handle
+ * @param[in]  http_session  The http session handle
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ * @see     http_session_create()
  */
-int http_delete_session(http_session_h http_session);
+int http_session_destroy(http_session_h http_session);
 
 /**
- * @internal
+ * @brief Opens Http transaction from the Http Session.
+ * @since_tizen 3.0
+ * @param[in]  http_session		The http session handle
+ * @param[in]  method			The http request method
+ * @param[out] http_transaction The http transaction handle
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_session_open_transaction(http_session_h http_session, http_method_e method, http_transaction_h *http_transaction);
+
+/**
  * @brief  Sets the value to redirect the HTTP request automatically.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Sets the value to redirect the HTTP request automatically.
- * @param[in]  http_session  http session handle
- * @param[in]  auto_redirect set value of auto redirect
+ * @param[in]  http_session 	The http session handle
+ * @param[in]  auto_redirection	The value which determines whether allow redirection or not
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ * @see		http_session_get_auto_redirection()
  */
-int http_session_set_auto_redirection(http_session_h http_session, bool enable);
+int http_session_set_auto_redirection(http_session_h http_session, bool auto_redirection);
 
 /**
- * @internal
- * @brief Get the auto redirection for the HTTP request.
+ * @brief Gets the auto redirection for the HTTP request.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Get the auto redirection for the HTTP request.
- * @param[in]  http_session  http session handle
- * @param[out]  auto_redirect get value of auto redirect
+ * @param[in]   http_session  The http session handle
+ * @param[out]  auto_redirect The value of auto redirect
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ * @see     http_session_set_auto_redirection()
  */
 int http_session_get_auto_redirection(http_session_h http_session, bool *auto_redirect);
 
 /**
- * @internal
  * @brief Gets the number of active transactions in the current session.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Gets the number of active transactions in the current session.
- * @param[in]  http_session  http session handle
- * @param[out]  active_transaction_count  active transaction count
+ * @param[in]   http_session  				The http session handle
+ * @param[out]  active_transaction_count	The number of activated transactions
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_session_get_active_transaction_count(http_session_h http_session, int *active_transaction_count);
 
 /**
- * @internal
  * @brief Gets the maximum number of transactions for the current session.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Gets the maximum number of transactions for the current session.
- * @param[in]  http_session  http session handle
- * @param[out]  transaction_count  maximum transaction count
+ * @param[in]   http_session 		The http session handle
+ * @param[out]  transaction_count  	The maximum transaction count
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_session_get_max_transaction_count(http_session_h http_session, int *transaction_count);
+
+/*
+ * @brief Destroys all transaction.
+ * @since_tizen 3.0
+ * @param[in]  http_session  The http session handle
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_OPERATION_fAILED  Operation failed
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_session_destroy_all_transactions(http_session_h http_session);
 /**
  * @}
  */
 
 /**
- * @internal
  * @addtogroup CAPI_NETWORK_HTTP_TRANSACTION_MODULE
  * @{
  */
 
 /**
- * @internal
- * @brief Open Http Transaction from the Http Session.
+ * @brief Submits the Http request.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Open Http Transaction from the Http Session.
- * @param[in]  http_session  http session handle
- * @param[in]  method  http method
- * @param[in]  transaction_header_callback  Header callback
- * @param[in]  transaction_body_callback  Body callback
- * @param[in]  transaction_write_callback  write callback
- * @param[in]  transaction_completed_cb  completed callback
- * @param[in]  transaction_aborted_cb  aborted callback
- * @param[out]  http_transaction  http transaction handle
- * @return 0 on success, otherwise negative error value
- * @retval  #HTTP_ERROR_NONE  Successful
- * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
- */
-int http_open_transaction(http_session_h http_session, http_method_e method, http_transaction_h *http_transaction);
-
-/**
- * @internal
- * @brief Submit the Http request.
- * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Submit the Http request.
  * @param[in]  http_transaction  The http transaction handle
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_submit(http_transaction_h http_transaction);
 
 /**
- * @internal
- * @brief Close the Http Transaction.
+ * @brief Closes the http transaction handle.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Close the Http Transaction.
  * @param[in]  http_transaction  The http transaction handle
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ * @see		http_transaction_create()
  */
-int http_transaction_close(http_transaction_h http_transaction);
+int http_transaction_destroy(http_transaction_h http_transaction);
 
-int http_transaction_set_received_header_cb(http_transaction_h transaction, http_transaction_header_cb header_cb, void* user_data);
+/*
+ * @brief Registers callback called when receive header.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  header_cb  		 The callback function to be called
+ * @param[in]  user_data 		 The user data passed to the callback function
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_set_received_header_cb(http_transaction_h http_transaction, http_transaction_header_cb header_cb, void* user_data);
 
-int http_transaction_set_received_body_cb(http_transaction_h transaction, http_transaction_body_cb body_cb, void* user_data);
+/*
+ * @brief Registers callback called when receive body.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  body_cb  		 The callback function to be called
+ * @param[in]  user_data 		 The user data passed to the callback function
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_set_received_body_cb(http_transaction_h http_transaction, http_transaction_body_cb body_cb, void* user_data);
 
-int http_transaction_set_uploaded_cb(http_transaction_h transaction, http_transaction_write_cb write_cb, void* user_data);
+/*
+ * @brief Registers callback called when write data.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  write_cb  		 The callback function to be called
+ * @param[in]  user_data 		 The user data passed to the callback function
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_set_uploaded_cb(http_transaction_h http_transaction, http_transaction_write_cb write_cb, void* user_data);
 
-int http_transaction_set_completed_cb(http_transaction_h transaction, http_transaction_completed_cb completed_cb, void* user_data);
+/*
+ * @brief Registers callback called when transaction is completed.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  completed_cb  	 The callback function to be called
+ * @param[in]  user_data 		 The user data passed to the callback function
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_set_completed_cb(http_transaction_h http_transaction, http_transaction_completed_cb completed_cb, void* user_data);
 
-int http_transaction_set_aborted_cb(http_transaction_h http_transaction, http_transaction_aborted_cb aborted_cb, void* user_data);
-
-int http_transaction_close_all(http_session_h session);
+/*
+ * @brief Registers callback called when transaction is aborted.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  header_cb  		 The callback function to be called
+ * @param[in]  user_data 		 The user data passed to the callback function
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_set_aborted_cb(http_transaction_h http_http_transaction, http_transaction_aborted_cb aborted_cb, void* user_data);
 
 
 /**
- * @internal
- * @brief Sets the progress callbacks.
+ * @brief Registers the progress callbacks.
+ * @details Registers callback that is called when data is uploaded/downloaded.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Sets the progress callbacks.
  * @param[in]  http_transaction  The http transaction handle
- * @param[in] upload_progress_cb  upload callback
- * @param[in] download_progress_cb download callback
+ * @param[in]  progress_cb 		 The callback function to be called
+ * @param[in]  user_data         The user data passed to the callback function
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_upload_progress_cb upload_progress_cb,
-															http_transaction_download_progress_cb download_progress_cb);
+int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_progress_cb progress_cb, void* user_data);
 
 /**
- * @internal
- * @brief Sets the timeout in seconds that is the timeout for waiting the transaction. @n
- * A timeout value of zero means an infinite timeout.
+ * @brief Sets the timeout in seconds that is the timeout for waiting the transaction.
+ * @details Sets the timeout in seconds that is the timeout for waiting the transaction. \n
+ *  A timeout value of zero means an infinite timeout.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Sets the timeout in seconds that is the timeout for waiting the transaction.
  * @param[in]  http_transaction  The http transaction handle
- * @param[in]  timeout  timeout in seconds
+ * @param[in]  timeout  		 The timeout in seconds
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_timeout(http_transaction_h http_transaction, int timeout);
 
 /**
- * @internal
- * @brief Get the time out in seconds for the transaction.
+ * @brief Gets the time out in seconds for the transaction.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Get the time out in seconds for the transaction.
  * @param[in]  http_transaction  The http transaction handle
- * @param[out]  timeout  timeout in seconds
+ * @param[out] timeout  		 The timeout in seconds
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_get_timeout(http_transaction_h http_transaction, int *timeout);
 
 /**
- * @internal
- * @brief Sets a user object to the instance of HTTP transaction.
+ * @brief Resumes the transaction.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Sets a user object to the instance of HTTP transaction.
- * @param[in]  http_transaction  The http transaction handle
- * @param[in]  user_object user object
- * @return 0 on success, otherwise negative error value
- * @retval  #HTTP_ERROR_NONE  Successful
- * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
- */
-int http_transaction_set_user_object(http_transaction_h http_transaction, void *user_object);
-
-/**
- * @internal
- * @brief Gets a user object that is set to the instance of HTTP transaction.
- * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Gets a user object that is set to the instance of HTTP transaction.
- * @param[in]  http_transaction  The http transaction handle
- * @param[out]  user_object  user object
- * @return 0 on success, otherwise negative error value
- * @retval  #HTTP_ERROR_NONE  Successful
- * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
- */
-int http_transaction_get_user_object(http_transaction_h http_transaction, void **user_object);
-
-/**
- * @internal
- * @brief Resumes the transaction after the http_transaction_cert_verifcation_required_cb event is invoked.
- * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Resumes the transaction after the http_transaction_cert_verifcation_required_cb event is invoked.
  * @param[in]  http_transaction  The http transaction handle
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_OPERATION_FAILED  Operation failed
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_resume(http_transaction_h http_transaction);
 
 /**
- * @internal
- * @brief Pauses the transaction after the http_transaction_cert_verifcation_required_cb event is invoked.
+ * @brief Pauses the transaction.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Pauses the transaction after the http_transaction_cert_verifcation_required_cb event is invoked.
  * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  pause_state		 The pause state of the connection
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_OPERATION_FAILED  Operation failed
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_pause(http_transaction_h http_transaction, http_pause_state_e pause_state);
 
 /**
- * @internal
  * @brief Sets ready to write event for a transaction.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Sets ready to write event for a transaction.
  * @param[in]  http_transaction  The http transaction handle
- * @param[out] read_to_write enable/disable ready to write
+ * @param[out] read_to_write 	 Enable/disable ready to write
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_ready_to_write(http_transaction_h http_transaction, bool read_to_write);
 
 /**
- * @internal
- * @brief Set the interface name.
+ * @brief Sets the interface name.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Set the interface name.
  * @param[in]  http_transaction  The http transaction handle
- * @param[in] interface_name  interface name
+ * @param[in]  interface_name  	 The interface name to use as outgoing network interface
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_interface_name(http_transaction_h http_transaction, const char *interface_name);
 
 /**
- * @internal
- * @brief Get the interface name.
+ * @brief Gets the interface name.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Get the interface name.
- * @param[in]  http_transaction  The http transaction handle
- * @param[out]  interface_name  interface name
+ * @remarks  The @a interface_name should be freed using free().
+ * @param[in]   http_transaction  The http transaction handle
+ * @param[out]  interface_name    The interface name
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_get_interface_name(http_transaction_h http_transaction, char **interface_name);
 
 /**
- * @internal
  * @brief Sets the flag to verify a server certificate.
+ * @details The verify determines whether verifies the peer's certificate.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Get the interface name.
  * @param[in]  http_transaction  The http transaction handle
- * @param[in]  verify flag to verify a server certificate.
+ * @param[in]  verify  			 The flag to verify a server certificate; true means verifies; false means it doesn't.
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_server_certificate_verification(http_transaction_h http_transaction, bool verify);
 
 /**
- * @internal
  * @brief Gets the flag to verify a server certificate.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Get the interface name.
  * @param[in]  http_transaction  The http transaction handle
- * @param[out]  verify flag to verify a server certificate.
+ * @param[out] verify 			 The flag to verify a server certificate; true means verifies; false means it doesn't.
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_get_server_certificate_verification(http_transaction_h http_transaction, bool* verify);
 
 /**
- * @internal
- * @brief Adds a named field, which is a <@c fieldName, @c fieldValue> pair, to the current instance of Http Transaction.
- * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
+ * @brief Adds a named field to header.
  * @details Adds a named field, which is a <@c fieldName, @c fieldValue> pair, to the current instance of Http Transaction.
+ * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
- * @param[in]  field_name  Http Header Field name
- * @param[in]  field_name  Http Header Field value
+ * @param[in]  field_name  		 The http Header Field name
+ * @param[in]  field_value  	 The http Header Field value
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_header_add_field(http_transaction_h http_transaction, const char *field_name, const char* field_value);
+int http_transaction_header_add_field(http_transaction_h http_transaction, const char *field_name, const char* field_value);
 
 /**
- * @internal
- * @brief Remove the named field, which is a <@c fieldName, @c fieldValue> pair, from the current instance of Http Transaction.
- * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
+ * @brief Removes the named field from header.
  * @details Remove the named field, which is a <@c fieldName, @c fieldValue> pair, from the current instance of Http Transaction.
+ * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
- * @param[in]  field_name  Http Header Field name
+ * @param[in]  field_name  		 The http Header Field name
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_header_remove_field(http_transaction_h http_transaction, const char *field_name);
+int http_transaction_header_remove_field(http_transaction_h http_transaction, const char *field_name);
 
 /**
- * @internal
- * @brief Get the Http Header Field value.
+ * @brief Gets the Http Header Field value from custom header.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Get the Http Header Field value.
+ * @remarks The @a field_value should be freed using free().
  * @param[in]  http_transaction  The http transaction handle
- * @param[in]  field_name  Http Header Field name
- * @param[out]  field_value  Http Header Field value
+ * @param[in]  field_name  		 The http Header Field name
+ * @param[out] field_value  	 The http Header Field value
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_header_get_field_value(http_transaction_h http_transaction, const char *field_name, char **field_value);
+int http_transaction_header_get_field_value(http_transaction_h http_transaction, const char *field_name, char **field_value);
 
 /**
  * @}
  */
 
 /**
- * @internal
  * @addtogroup CAPI_NETWORK_HTTP_REQUEST_MODULE
  * @{
  */
 
 /**
- * @internal
  * @brief Sets an HTTP method of the request header.
+ * @details Set an HTTP method such as GET, POST, PUT and etc.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Sets an HTTP method of the request header.
  * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  method			 The http method
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_request_set_method(http_transaction_h http_transaction, http_method_e method);
+int http_transaction_request_set_method(http_transaction_h http_transaction, http_method_e method);
 
 /**
- * @internal
- * @brief Get the Http method.
+ * @brief Gets the Http method from request header.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Get the Http method.
  * @param[in]  http_transaction  The http transaction handle
- * @param[out]  method method
+ * @param[out] method 			 The http method
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_request_get_method(http_transaction_h http_transaction, http_method_e *method);
+int http_transaction_request_get_method(http_transaction_h http_transaction, http_method_e *method);
 
 /**
- * @internal
  * @brief Sets an HTTP version of the request header.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Sets an HTTP version of the request header.
- * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  http_transaction The http transaction handle
+ * @param[in]  version			The http version
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_request_set_version(http_transaction_h http_transaction, http_version_e version);
+int http_transaction_request_set_version(http_transaction_h http_transaction, http_version_e version);
 
 /**
- * @internal
- * @brief Get the Http version.
- * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
+ * @brief Gets the Http version from request header.
  * @details Get the Http version.
- * @param[in]  http_transaction  The http transaction handle
- * @param[out]  version version
+ * @since_tizen 3.0
+ * @param[in]  http_transaction The http transaction handle
+ * @param[out]  version  		The http version
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_request_get_version(http_transaction_h http_transaction, http_version_e *version);
+int http_transaction_request_get_version(http_transaction_h http_transaction, http_version_e *version);
 
 /**
- * @internal
  * @brief Sets a URI of the request header.
- * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Sets a URI of the request header.
- * @param[in]  http_transaction  The http transaction handle
- * @return 0 on success, otherwise negative error value
- * @retval  #HTTP_ERROR_NONE  Successful
- * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
- */
-int http_request_set_uri(http_transaction_h http_transaction, const char *host_uri);
-
-/**
- * @internal
- * @brief Get the uri.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Get the uri.
- * @param[in]  http_transaction  The http transaction handle
- * @param[out]  host_uri  host uri
+ * @param[in]  http_transaction The http transaction handle
+ * @param[in]  host_uri  		The uri to use in the request
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_request_get_uri(http_transaction_h http_transaction, char **host_uri);
+int http_transaction_request_set_uri(http_transaction_h http_transaction, const char *host_uri);
 
 /**
- * @internal
+ * @brief Gets the uri.
+ * @since_tizen 3.0
+ * @remarks  The @a host_uri should be freed using free().
+ * @param[in]  http_transaction The http transaction handle
+ * @param[out] host_uri  		The host uri
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_request_get_uri(http_transaction_h http_transaction, char **host_uri);
+
+/**
  * @brief Sets the Accept-Encoding header field of HttpRequest.
+ * @details The Accept-Encoding header enables automatic decompression of HTTP downloads.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Sets the Accept-Encoding header field of HttpRequest.
- * @param[in]  http_transaction  The http transaction handle
- * @param[in]  encoding  encoding
+ * @param[in]  http_transaction The http transaction handle
+ * @param[in]  encoding  		The encoding algorithms (e.g. gizp, deflate)
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_request_set_accept_encoding(http_transaction_h http_transaction, const char *encoding);
+int http_transaction_request_set_accept_encoding(http_transaction_h http_transaction, const char *encoding);
 
 /**
- * @internal
- * @brief Get the Accept-Encoding header field of HttpRequest.
+ * @brief Gets the Accept-Encoding header field of HttpRequest.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Get the Accept-Encoding header field of HttpRequest.
- * @param[in]  http_transaction  The http transaction handle
- * @param[out]  encoding  encoding
+ * @remarks  The @a encoding should be freed using free().
+ * @param[in]  http_transaction The http transaction handle
+ * @param[out] encoding  		The encoding algorithms
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_request_get_accept_encoding(http_transaction_h http_transaction, char **encoding);
+int http_transaction_request_get_accept_encoding(http_transaction_h http_transaction, char **encoding);
 
 /**
- * @internal
+ * @brief Sets a cookie in the HTTP request.
+ * @since_tizen 3.0
+ * @remarks  The format of string should be NME=CONTENTS (e.g. "name1=hello; name2=tizen;")
+ * @param[in]  http_transaction The http transaction handle
+ * @param[in]  cookie  			The cookie
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_request_set_cookie(http_transaction_h http_transaction, const char *cookie);
+
+/**
+ * @brief Gets a cookie in the HTT request.
+ * @since_tizen 3.0
+ * @remarks  The @a cookie should be freed using free().
+ * @param[in]  http_transaction The http transaction handle
+ * @param[out] cookie  			The cookie
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_request_get_cookie(http_transaction_h http_transaction, const char **cookie);
+
+/**
  * @brief Sets the request message body.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Sets the request message body.
- * @param[in]  http_transaction  The http transaction handle
- * @param[in]  body  message body data
+ * @param[in]  http_transaction The http transaction handle
+ * @param[in]  body  			The message body data
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_request_write_body(http_transaction_h http_transaction, const char *body);
+int http_transaction_request_write_body(http_transaction_h http_transaction, const char *body);
 
 /**
  * @}
  */
 
 /**
- * @internal
  * @addtogroup CAPI_NETWORK_HTTP_RESPONSE_MODULE
  * @{
  */
 
 /**
- * @internal
- * @brief Get the Http status code from Http Response.
+ * @brief Gets the Http status code from Http Response.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Get the Http status code from Http Response.
  * @param[in]  http_transaction  The http transaction handle
- * @param[out]  status_code http status code
+ * @param[out] status_code 		 The http status code
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_response_get_status_code(http_transaction_h http_transaction, http_status_code_e *status_code);
+int http_transaction_response_get_status_code(http_transaction_h http_transaction, http_status_code_e *status_code);
 
 /**
- * @internal
- * @brief Get the Http status text from Http Response.
+ * @brief Gets the Http status text from Http Response.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Get the Http status text from Http Response.
+ * @remarks  The @a status_text should be freed using free().
  * @param[in]  http_transaction  The http transaction handle
- * @param[out]  status_text http status text
+ * @param[out] status_text  	 The http status text
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_response_get_status_text(http_transaction_h http_transaction, char **status_text);
+int http_transaction_response_get_status_text(http_transaction_h http_transaction, char **status_text);
 
 /**
- * @internal
- * @brief Get the Http version from Http Response.
+ * @brief Gets the Http version from Http Response.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Get the Http version from Http Response.
  * @param[in]  http_transaction  The http transaction handle
- * @param[out]  version version
+ * @param[out] version 			 The http version
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_response_get_version(http_transaction_h http_transaction, http_version_e *version);
+int http_transaction_response_get_version(http_transaction_h http_transaction, http_version_e *version);
 
 /**
  * @}
