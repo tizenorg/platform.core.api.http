@@ -45,11 +45,20 @@ void _check_curl_multi_status(gpointer user_data)
 						transaction->completed_cb(transaction, transaction->completed_user_data);
 					break;
 				case CURLE_COULDNT_RESOLVE_HOST:
+					if (transaction->aborted_cb)
+						transaction->aborted_cb(transaction, HTTP_ERROR_COULDNT_RESOLVE_HOST, transaction->aborted_user_data);
+					break;
 				case CURLE_COULDNT_CONNECT:
+					if (transaction->aborted_cb)
+						transaction->aborted_cb(transaction, HTTP_ERROR_COULDNT_CONNECT, transaction->aborted_user_data);
+					break;
 				case CURLE_SSL_CONNECT_ERROR:
+					if (transaction->aborted_cb)
+						transaction->aborted_cb(transaction, HTTP_ERROR_SSL_CONNECT_ERROR, transaction->aborted_user_data);
+					break;
 				case CURLE_OPERATION_TIMEDOUT:
 					if (transaction->aborted_cb)
-						transaction->aborted_cb(transaction, (int)curl_code, transaction->aborted_user_data);
+						transaction->aborted_cb(transaction, HTTP_ERROR_OPERATION_TIMEDOUT, transaction->aborted_user_data);
 					break;
 				default:
 					break;
@@ -215,7 +224,7 @@ int __handle_timer_cb(CURLM *curl_multi, long timeout_ms, void *user_data)
 	return 0;
 }
 
-API int http_create_session(http_session_h *http_session, http_session_mode_e mode)
+API int http_session_create(http_session_mode_e mode, http_session_h *http_session)
 {
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
@@ -223,6 +232,10 @@ API int http_create_session(http_session_h *http_session, http_session_mode_e mo
 	__http_session_h *session = NULL;
 
 	session = (__http_session_h *)malloc(sizeof(__http_session_h));
+	if (session == NULL) {
+		ERR("Fail to allocate session memory!!");
+		return HTTP_ERROR_OUT_OF_MEMORY;
+	}
 
 	session->multi_handle = curl_multi_init();
 	session->session_id = _generate_session_id();
@@ -244,7 +257,7 @@ API int http_create_session(http_session_h *http_session, http_session_mode_e mo
 	return HTTP_ERROR_NONE;
 }
 
-API int http_delete_session(http_session_h http_session)
+API int http_session_destroy(http_session_h http_session)
 {
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
@@ -265,14 +278,14 @@ API int http_delete_session(http_session_h http_session)
 	return HTTP_ERROR_NONE;
 }
 
-API int http_session_set_auto_redirection(http_session_h http_session, bool enable)
+API int http_session_set_auto_redirection(http_session_h http_session, bool auto_redirection)
 {
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
 
 	__http_session_h *session = (__http_session_h *)http_session;
 
-	session->auto_redirect = enable;
+	session->auto_redirect = auto_redirection;
 
 	return HTTP_ERROR_NONE;
 }

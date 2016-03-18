@@ -19,6 +19,19 @@
 
 #include "net_connection.h"
 
+#include <pthread.h>
+#include <openssl/err.h>
+
+#define MUTEX_TYPE       pthread_mutex_t
+#define MUTEX_SETUP(x)   pthread_mutex_init(&(x), NULL)
+#define MUTEX_CLEANUP(x) pthread_mutex_destroy(&(x))
+#define MUTEX_LOCK(x)    pthread_mutex_lock(&(x))
+#define MUTEX_UNLOCK(x)  pthread_mutex_unlock(&(x))
+#define THREAD_ID        pthread_self()
+
+/* This array will store all of the mutexes available to OpenSSL. */
+static MUTEX_TYPE *mutex_buf= NULL;
+
 http_method_e _get_method(gchar* method)
 {
 	if (g_strcmp0(method, "GET") == 0) {
@@ -39,7 +52,7 @@ http_method_e _get_method(gchar* method)
 		return HTTP_METHOD_CONNECT;
 	}
 
-	return HTTP_METHOD_NONE;
+	return HTTP_METHOD_GET;
 }
 
 gchar* _get_http_method(http_method_e method)
@@ -47,10 +60,6 @@ gchar* _get_http_method(http_method_e method)
 	gchar* http_method = NULL;
 
 	switch (method) {
-	case HTTP_METHOD_GET:
-		http_method = g_strdup("GET");
-		break;
-
 	case HTTP_METHOD_OPTIONS:
 		http_method = g_strdup("OPTIONS");
 		break;
@@ -78,10 +87,9 @@ gchar* _get_http_method(http_method_e method)
 	case HTTP_METHOD_CONNECT:
 		http_method = g_strdup("CONNECT");
 		break;
-
-	case HTTP_METHOD_NONE:
+	case HTTP_METHOD_GET:
 	default:
-		http_method = NULL;
+		http_method = g_strdup("GET");
 		break;
 	}
 
@@ -147,17 +155,85 @@ CATCH:
 	return proxy_addr;
 }
 
+static void locking_function(int mode, int n, const char * file, int line)
+{
+	if (mode & CRYPTO_LOCK)
+		MUTEX_LOCK(mutex_buf[n]);
+	else
+		MUTEX_UNLOCK(mutex_buf[n]);
+}
+
+static unsigned long id_function(void)
+{
+	return ((unsigned long)THREAD_ID);
+}
+
+int thread_setup(void)
+{
+	int index = 0;
+
+	mutex_buf = malloc(CRYPTO_num_locks() * sizeof(MUTEX_TYPE));
+	if (!mutex_buf)
+		return 0;
+
+	for (index = 0;  index < CRYPTO_num_locks();  index++) {
+		MUTEX_SETUP(mutex_buf[index]);
+	}
+	CRYPTO_set_id_callback(id_function);
+	CRYPTO_set_locking_callback(locking_function);
+
+	return 1;
+}
+
+int thread_cleanup(void)
+{
+	int index;
+
+	if (!mutex_buf)
+		return 0;
+
+	CRYPTO_set_id_callback(NULL);
+	CRYPTO_set_locking_callback(NULL);
+
+	for (index = 0;  index < CRYPTO_num_locks();  index++) {
+		MUTEX_CLEANUP(mutex_buf[index]);
+	}
+
+	free(mutex_buf);
+	mutex_buf = NULL;
+
+	return 1;
+}
+
 API int http_init()
 {
+	int ret = 0;
+
 	if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
 		DBG("curl_global_init failed, so returning!\n");
+		return HTTP_ERROR_OPERATION_FAILED;
+	}
+
+	ret = thread_setup();
+	if (!ret) {
+		DBG("ssl thread initialization failed!\n");
 		return HTTP_ERROR_OPERATION_FAILED;
 	}
 
 	return HTTP_ERROR_NONE;
 }
 
-API void http_deinit()
+API int http_deinit()
 {
+	int ret = 0;
+
+	ret = thread_cleanup();
+	if (!ret) {
+		DBG("ssl thread de-initialization failed!\n");
+		return HTTP_ERROR_OPERATION_FAILED;
+	}
+
 	curl_global_cleanup();
+
+	return HTTP_ERROR_NONE;
 }
