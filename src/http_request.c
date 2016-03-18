@@ -17,7 +17,7 @@
 #include "http.h"
 #include "http_private.h"
 
-API int http_request_set_method(http_transaction_h http_transaction, http_method_e method)
+API int http_transaction_request_set_method(http_transaction_h http_transaction, http_method_e method)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -35,7 +35,7 @@ API int http_request_set_method(http_transaction_h http_transaction, http_method
 	return HTTP_ERROR_NONE;
 }
 
-API int http_request_get_method(http_transaction_h http_transaction, http_method_e *method)
+API int http_transaction_request_get_method(http_transaction_h http_transaction, http_method_e *method)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -50,7 +50,7 @@ API int http_request_get_method(http_transaction_h http_transaction, http_method
 	return HTTP_ERROR_NONE;
 }
 
-API int http_request_set_version(http_transaction_h http_transaction, http_version_e version)
+API int http_transaction_request_set_version(http_transaction_h http_transaction, http_version_e version)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -63,7 +63,7 @@ API int http_request_set_version(http_transaction_h http_transaction, http_versi
 	return HTTP_ERROR_NONE;
 }
 
-API int http_request_get_version(http_transaction_h http_transaction, http_version_e *version)
+API int http_transaction_request_get_version(http_transaction_h http_transaction, http_version_e *version)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -78,7 +78,7 @@ API int http_request_get_version(http_transaction_h http_transaction, http_versi
 	return HTTP_ERROR_NONE;
 }
 
-API int http_request_set_uri(http_transaction_h http_transaction, const char *host_uri)
+API int http_transaction_request_set_uri(http_transaction_h http_transaction, const char *host_uri)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -93,7 +93,7 @@ API int http_request_set_uri(http_transaction_h http_transaction, const char *ho
 	return HTTP_ERROR_NONE;
 }
 
-API int http_request_get_uri(http_transaction_h http_transaction, char **host_uri)
+API int http_transaction_request_get_uri(http_transaction_h http_transaction, char **host_uri)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -113,7 +113,7 @@ API int http_request_get_uri(http_transaction_h http_transaction, char **host_ur
 	return HTTP_ERROR_NONE;
 }
 
-API int http_request_set_accept_encoding(http_transaction_h http_transaction, const char *encoding)
+API int http_transaction_request_set_accept_encoding(http_transaction_h http_transaction, const char *encoding)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -128,7 +128,7 @@ API int http_request_set_accept_encoding(http_transaction_h http_transaction, co
 	return HTTP_ERROR_NONE;
 }
 
-API int http_request_get_accept_encoding(http_transaction_h http_transaction, char **encoding)
+API int http_transaction_request_get_accept_encoding(http_transaction_h http_transaction, char **encoding)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -147,7 +147,7 @@ API int http_request_get_accept_encoding(http_transaction_h http_transaction, ch
 	return HTTP_ERROR_NONE;
 }
 
-API int http_request_set_cookie(http_transaction_h http_transaction, const char* cookie)
+API int http_transaction_request_set_cookie(http_transaction_h http_transaction, const char *cookie)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -162,7 +162,7 @@ API int http_request_set_cookie(http_transaction_h http_transaction, const char*
 	return HTTP_ERROR_NONE;
 }
 
-API int http_request_get_cookie(http_transaction_h http_transaction, const char** cookie)
+API int http_transaction_request_get_cookie(http_transaction_h http_transaction, const char **cookie)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -181,7 +181,7 @@ API int http_request_get_cookie(http_transaction_h http_transaction, const char*
 	return HTTP_ERROR_NONE;
 }
 
-API int http_request_write_body(http_transaction_h http_transaction, const char *body)
+API int http_transaction_request_write_body(http_transaction_h http_transaction, const char *body)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -239,7 +239,7 @@ int _read_request_body(http_transaction_h http_transaction, char **body)
 	*body = malloc(curr_len + 1);
 	if (*body == NULL) {
 		DBG("malloc() failed\n");
-		return HTTP_ERROR_OPERATION_FAILED;
+		return HTTP_ERROR_OUT_OF_MEMORY;
 	}
 
 	for (index = 0; index < len; index++) {
@@ -251,7 +251,7 @@ int _read_request_body(http_transaction_h http_transaction, char **body)
 		*body = realloc(*body, new_len + 1);
 		if (*body == NULL) {
 			DBG("realloc() failed\n");
-			return HTTP_ERROR_OPERATION_FAILED;
+			return HTTP_ERROR_OUT_OF_MEMORY;
 		}
 
 		memcpy(*body + curr_len, ptr, body_size);
