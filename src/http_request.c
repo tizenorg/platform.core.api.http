@@ -147,7 +147,7 @@ API int http_request_get_accept_encoding(http_transaction_h http_transaction, ch
 	return HTTP_ERROR_NONE;
 }
 
-API int http_request_set_cookie(http_transaction_h http_transaction, const char* cookie)
+API int http_request_set_cookie(http_transaction_h http_transaction, const char *cookie)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -162,7 +162,7 @@ API int http_request_set_cookie(http_transaction_h http_transaction, const char*
 	return HTTP_ERROR_NONE;
 }
 
-API int http_request_get_cookie(http_transaction_h http_transaction, const char** cookie)
+API int http_request_get_cookie(http_transaction_h http_transaction, const char **cookie)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
