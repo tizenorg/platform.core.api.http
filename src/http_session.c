@@ -215,7 +215,7 @@ int __handle_timer_cb(CURLM *curl_multi, long timeout_ms, void *user_data)
 	return 0;
 }
 
-API int http_create_session(http_session_h *http_session, http_session_mode_e mode)
+API int http_session_create(http_session_mode_e mode, http_session_h *http_session)
 {
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
@@ -244,7 +244,7 @@ API int http_create_session(http_session_h *http_session, http_session_mode_e mo
 	return HTTP_ERROR_NONE;
 }
 
-API int http_delete_session(http_session_h http_session)
+API int http_session_destroy(http_session_h http_session)
 {
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
@@ -265,14 +265,14 @@ API int http_delete_session(http_session_h http_session)
 	return HTTP_ERROR_NONE;
 }
 
-API int http_session_set_auto_redirection(http_session_h http_session, bool enable)
+API int http_session_set_auto_redirection(http_session_h http_session, bool auto_redirection)
 {
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
 
 	__http_session_h *session = (__http_session_h *)http_session;
 
-	session->auto_redirect = enable;
+	session->auto_redirect = auto_redirection;
 
 	return HTTP_ERROR_NONE;
 }
@@ -287,6 +287,55 @@ API int http_session_get_auto_redirection(http_session_h http_session, bool *aut
 	__http_session_h *session = (__http_session_h *)http_session;
 
 	*auto_redirect =  session->auto_redirect;
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_session_open_transaction(http_session_h http_session, http_method_e method, http_transaction_h *http_transaction)
+{
+	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_session) is NULL\n");
+
+	__http_transaction_h *transaction = NULL;
+
+	transaction = (__http_transaction_h *)malloc(sizeof(__http_transaction_h));
+	transaction->easy_handle = NULL;
+	transaction->interface_name = NULL;
+	transaction->timeout = 0;
+	transaction->verify_peer = 1;
+	transaction->ca_path = g_strdup(HTTP_DEFAULT_CA_PATH);
+	transaction->error[0] = '\0';
+
+	transaction->header_cb = NULL;
+	transaction->body_cb = NULL;
+	transaction->write_cb = NULL;
+	transaction->completed_cb = NULL;
+	transaction->aborted_cb = NULL;
+	transaction->progress_cb = NULL;
+
+	transaction->session = http_session;
+	transaction->session->active_transaction_count++;
+	transaction->session_id = 0;
+
+	transaction->request = (__http_request_h *)malloc(sizeof(__http_request_h));
+	transaction->response = (__http_response_h *)malloc(sizeof(__http_response_h));
+	transaction->header = (__http_header_h *)malloc(sizeof(__http_header_h));
+
+	transaction->request->host_uri = NULL;
+	transaction->request->method = _get_http_method(method);
+	transaction->request->encoding = NULL;
+	transaction->request->cookie = NULL;
+	transaction->request->http_version = HTTP_VERSION_1_1;
+	transaction->request->body_queue = g_queue_new();
+	transaction->request->tot_size = 0;
+
+	transaction->header->header_list = NULL;
+	transaction->header->hash_table = NULL;
+
+	transaction->thread = NULL;
+
+	*http_transaction = (http_transaction_h)transaction;
+	_add_transaction_to_list(transaction);
 
 	return HTTP_ERROR_NONE;
 }
