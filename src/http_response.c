@@ -19,7 +19,7 @@
 #include "http.h"
 #include "http_private.h"
 
-static int __convert_status_code(char* status_code)
+static int __convert_status_code(char *status_code)
 {
 	int i = 0;
 	int converted_digit = 0;
@@ -33,7 +33,7 @@ static int __convert_status_code(char* status_code)
 	return converted_status_code;
 }
 
-void __parse_response_header(char* buffer, size_t written, gpointer user_data)
+void __parse_response_header(char *buffer, size_t written, gpointer user_data)
 {
 	__http_transaction_h* transaction = (__http_transaction_h *)user_data;
 	__http_response_h*response = (__http_response_h *)transaction->response;
@@ -65,7 +65,7 @@ void __parse_response_header(char* buffer, size_t written, gpointer user_data)
 	}
 }
 
-API int http_response_get_status_code(http_transaction_h http_transaction, http_status_code_e* status_code)
+API int http_response_get_status_code(http_transaction_h http_transaction, http_status_code_e *status_code)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -80,7 +80,7 @@ API int http_response_get_status_code(http_transaction_h http_transaction, http_
 	return HTTP_ERROR_NONE;
 }
 
-API int http_response_get_status_text(http_transaction_h http_transaction, char** status_text)
+API int http_response_get_status_text(http_transaction_h http_transaction, char **status_text)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -95,7 +95,7 @@ API int http_response_get_status_text(http_transaction_h http_transaction, char*
 	return HTTP_ERROR_NONE;
 }
 
-API int http_response_get_version(http_transaction_h http_transaction, http_version_e* version)
+API int http_response_get_version(http_transaction_h http_transaction, http_version_e *version)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");

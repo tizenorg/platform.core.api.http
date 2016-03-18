@@ -290,8 +290,6 @@ API int http_open_transaction(http_session_h http_session, http_method_e method,
 
 	__http_transaction_h *transaction = NULL;
 
-	DBG("[Seonah] + ");
-
 	transaction = (__http_transaction_h *)malloc(sizeof(__http_transaction_h));
 	transaction->easy_handle = NULL;
 	transaction->interface_name = NULL;
@@ -305,9 +303,7 @@ API int http_open_transaction(http_session_h http_session, http_method_e method,
 	transaction->write_cb = NULL;
 	transaction->completed_cb = NULL;
 	transaction->aborted_cb = NULL;
-
-	transaction->upload_progress_cb = NULL;
-	transaction->download_progress_cb = NULL;
+	transaction->progress_cb = NULL;
 
 	transaction->session = http_session;
 	transaction->session->active_transaction_count++;
@@ -323,6 +319,7 @@ API int http_open_transaction(http_session_h http_session, http_method_e method,
 	transaction->request->cookie = NULL;
 	transaction->request->http_version = HTTP_VERSION_1_1;
 	transaction->request->body_queue = g_queue_new();
+	transaction->request->tot_size = 0;
 
 	transaction->header->header_list = NULL;
 	transaction->header->hash_table = NULL;
@@ -332,7 +329,6 @@ API int http_open_transaction(http_session_h http_session, http_method_e method,
 	*http_transaction = (http_transaction_h)transaction;
 	_add_transaction_to_list(transaction);
 
-	DBG("[Seonah] - ");
 	return HTTP_ERROR_NONE;
 }
 
@@ -369,7 +365,6 @@ API int http_transaction_close(http_transaction_h http_transaction)
 		session->active_transaction_count--;
 
 	if (transaction) {
-
 		if (transaction->easy_handle != NULL) {
 			curl_easy_cleanup(transaction->easy_handle);
 			transaction->easy_handle = NULL;
@@ -394,9 +389,7 @@ API int http_transaction_close(http_transaction_h http_transaction)
 		transaction->write_cb = NULL;
 		transaction->completed_cb = NULL;
 		transaction->aborted_cb = NULL;
-
-		transaction->upload_progress_cb = NULL;
-		transaction->download_progress_cb = NULL;
+		transaction->progress_cb = NULL;
 
 		if (request) {
 			if (request->host_uri != NULL) {
@@ -465,8 +458,13 @@ API int http_transaction_pause(http_transaction_h http_transaction, http_pause_s
 				"Wrong pause state \n");
 
 	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+	int ret = 0;
 
-	curl_easy_pause(transaction->easy_handle, pause_state);
+	ret = curl_easy_pause(transaction->easy_handle, pause_state);
+	if (ret != 0) {
+		ERR("Fail to pause!(%d)", ret);
+		return HTTP_ERROR_OPERATION_FAILED;
+	}
 
 	return HTTP_ERROR_NONE;
 }
@@ -477,27 +475,29 @@ API int http_transaction_resume(http_transaction_h http_transaction)
 			"parameter(http_transaction) is NULL\n");
 
 	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+	int ret = 0;
 
-	curl_easy_pause(transaction->easy_handle, CURLPAUSE_CONT);
+	ret = curl_easy_pause(transaction->easy_handle, CURLPAUSE_CONT);
+	if (ret != 0) {
+		ERR("Fail to resume!(%d)", ret);
+		return HTTP_ERROR_OPERATION_FAILED;
+	}
 
 	return HTTP_ERROR_NONE;
 }
 
 
-API int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_upload_progress_cb upload_progress_cb,
-															http_transaction_download_progress_cb download_progress_cb)
+API int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_progress_cb progress_cb, void* user_data)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
-	_retvm_if(upload_progress_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
-			"parameter(upload_progress_cb) is NULL\n");
-	_retvm_if(download_progress_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
-			"parameter(download_progress_cb) is NULL\n");
+	_retvm_if(progress_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(progress_cb) is NULL\n");
 
 	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
 
-	transaction->upload_progress_cb = upload_progress_cb;
-	transaction->download_progress_cb = download_progress_cb;
+	transaction->progress_cb = progress_cb;
+	transaction->progress_user_data = user_data;
 
 	return HTTP_ERROR_NONE;
 }
@@ -562,17 +562,16 @@ API int http_transaction_set_completed_cb(http_transaction_h http_transaction, h
 	return HTTP_ERROR_NONE;
 }
 
-API int http_transaction_set_aborted_cb(http_transaction_h http_transaction, http_transaction_aborted_cb aborted_cb, void* user_data)
+API int http_transaction_set_aborted_cb(http_transaction_h http_transaction, http_transaction_aborted_cb aborted_cb,  void* user_data)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
-			"parameter(http_transaction) is NULL\n");
+			 "parameter(http_transaction) is NULL\n");
 	_retvm_if(aborted_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(aborted_cb) is NULL\n");
 
 	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
 
 	transaction->aborted_cb = aborted_cb;
-	transaction->aborted_user_data = user_data;
 
 	return HTTP_ERROR_NONE;
 }
@@ -583,9 +582,7 @@ API int http_transaction_unset_progress_cb(http_transaction_h http_transaction)
 			"parameter(http_transaction) is NULL\n");
 
 	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
-
-	transaction->upload_progress_cb = NULL;
-	transaction->download_progress_cb = NULL;
+	transaction->progress_cb = NULL;
 
 	return HTTP_ERROR_NONE;
 }
@@ -695,11 +692,8 @@ API int http_transaction_close_all(http_session_h http_session)
 	for (list = transaction_list; list; list = list->next) {
 		__http_transaction_h *transaction = (__http_transaction_h *)list->data;
 		if (session->session_id == transaction->session_id) {
-			DBG("[Seonah]Close.. (%p)", list->data);
 			_remove_transaction_from_list(list->data);
-			DBG("[Seonah]Close..1");
 			http_transaction_close((http_transaction_h) transaction);
-			DBG("[Seonah]Close..11");
 		}
 	}
 
