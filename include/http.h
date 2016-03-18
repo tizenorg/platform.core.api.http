@@ -45,7 +45,6 @@ typedef void * http_transaction_h;
  */
 
 /**
- * @internal
  * @brief Enumeration for the http session.
  * @since_tizen 3.0
  */
@@ -55,7 +54,6 @@ typedef enum {
 } http_session_mode_e;
 
 /**
- * @internal
  * @brief Enumeration for the http method.
  * @since_tizen 3.0
  */
@@ -72,7 +70,6 @@ typedef enum {
 } http_method_e;
 
 /**
- * @internal
  * @brief Enumeration for the http version.
  * @since_tizen 3.0
  */
@@ -82,7 +79,6 @@ typedef enum {
 } http_version_e;
 
 /**
- * @internal
  * @brief Enumeration for transfer pause state
  * @since_tizen 3.0
  */
@@ -93,7 +89,6 @@ typedef enum {
 } http_pause_state_e;
 
 /**
- * @internal
  * @brief Enumeration for the http error code.
  * @since_tizen 3.0
  */
@@ -111,7 +106,6 @@ typedef enum {
 } http_error_code_e;
 
 /**
- * @internal
  * @brief Enumeration for the http status code.
  * @since_tizen 3.0
  */
@@ -160,7 +154,6 @@ typedef enum {
 } http_status_code_e;
 
 /**
- * @internal
  * @brief Called when the http header is received.
  * @since_tizen 3.0
  * @details Called when the http header is received.
@@ -170,7 +163,6 @@ typedef enum {
 typedef void (*http_transaction_header_cb)(http_transaction_h transaction, char *header, size_t header_len, void *user_data);
 
 /**
- * @internal
  * @brief Called when the http response is received.
  * @since_tizen 3.0
  * @details Called when the http response is received.
@@ -181,7 +173,6 @@ typedef void (*http_transaction_header_cb)(http_transaction_h transaction, char 
 typedef void (*http_transaction_body_cb)(http_transaction_h transaction, char *body, size_t size, size_t count, void *user_data);
 
 /**
- * @internal
  * @brief Called when the http ready to write event is received.
  * @since_tizen 3.0
  * @details Called when the http ready to write event is received.
@@ -190,7 +181,6 @@ typedef void (*http_transaction_body_cb)(http_transaction_h transaction, char *b
 typedef void (*http_transaction_write_cb)(http_transaction_h transaction, int recommended_chunk_size, void *user_data);
 
 /**
- * @internal
  * @brief Called when the http transaction is completed.
  * @since_tizen 3.0
  * @details Called when the http transaction is completed.
@@ -198,7 +188,6 @@ typedef void (*http_transaction_write_cb)(http_transaction_h transaction, int re
 typedef void (*http_transaction_completed_cb)(http_transaction_h transaction, void *user_data);
 
 /**
- * @internal
  * @brief Called when the http transaction is aborted.
  * @since_tizen 3.0
  * @details Called when the http transaction is aborted.
@@ -207,70 +196,48 @@ typedef void (*http_transaction_completed_cb)(http_transaction_h transaction, vo
 typedef void (*http_transaction_aborted_cb)(http_transaction_h transaction, int reason, void *user_data);
 
 /**
- * @internal
- * @brief Called to notify when the content body of the request message is being uploaded.
- * @since_tizen 3.0
- * @details Called to notify when the content body of the request message is being uploaded.
- * @param[in] currentLength current length of the uploaded data (in bytes)
- * @param[in] totalLength total length of the data (in bytes) to upload
- */
-typedef void (*http_transaction_upload_progress_cb)(long long currentLength, long long totalLength);
-
-/**
- * @internal
  * @brief Called to notify when the content body of the response message is being downloaded.
  * @since_tizen 3.0
  * @details Called to notify when the content body of the response message is being downloaded.
  * @param[in] currentLength current length of the downloaded data (in bytes)
  * @param[in] totalLength total length of the data (in bytes) to download
  */
-typedef void (*http_transaction_download_progress_cb)(long long currentLength, long long totalLength);
+typedef void (*http_transaction_progress_cb)(http_transaction_h transaction, double dltotla, double dlnow, double ultotal, double ulnow, void *user_data);
 
 /**
- * @internal
  * @addtogroup CAPI_NETWORK_HTTP_MODULE
  * @{
  */
 
 /**
- * @internal
  * @brief Initialize the Http module.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Initialize the Http module.
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
  */
-int http_init();
+int http_init(void);
 
 /**
- * @internal
  * @brief Deinitialize the Http module.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Deinitialize the Http module.
  */
-void http_deinit();
+int http_deinit(void);
 
 /**
  * @}
  */
 
 /**
- * @internal
  * @addtogroup CAPI_NETWORK_HTTP_SESSION_MODULE
  * @{
  */
 
 /**
- * @internal
  * @brief Create the Http Session.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Create the Http Session.
  * @param[out]  http_session  http session handle
  * @param[in]  mode  http session mode
@@ -281,11 +248,8 @@ void http_deinit();
 int http_create_session(http_session_h *http_session, http_session_mode_e mode);
 
 /**
- * @internal
  * @brief Delete the Http Session.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Delete the Http Session.
  * @param[in]  http_session  http session handle
  * @return 0 on success, otherwise negative error value
@@ -295,11 +259,8 @@ int http_create_session(http_session_h *http_session, http_session_mode_e mode);
 int http_delete_session(http_session_h http_session);
 
 /**
- * @internal
  * @brief  Sets the value to redirect the HTTP request automatically.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Sets the value to redirect the HTTP request automatically.
  * @param[in]  http_session  http session handle
  * @param[in]  auto_redirect set value of auto redirect
@@ -310,11 +271,8 @@ int http_delete_session(http_session_h http_session);
 int http_session_set_auto_redirection(http_session_h http_session, bool enable);
 
 /**
- * @internal
  * @brief Get the auto redirection for the HTTP request.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Get the auto redirection for the HTTP request.
  * @param[in]  http_session  http session handle
  * @param[out]  auto_redirect get value of auto redirect
@@ -325,11 +283,8 @@ int http_session_set_auto_redirection(http_session_h http_session, bool enable);
 int http_session_get_auto_redirection(http_session_h http_session, bool *auto_redirect);
 
 /**
- * @internal
  * @brief Gets the number of active transactions in the current session.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Gets the number of active transactions in the current session.
  * @param[in]  http_session  http session handle
  * @param[out]  active_transaction_count  active transaction count
@@ -340,11 +295,8 @@ int http_session_get_auto_redirection(http_session_h http_session, bool *auto_re
 int http_session_get_active_transaction_count(http_session_h http_session, int *active_transaction_count);
 
 /**
- * @internal
  * @brief Gets the maximum number of transactions for the current session.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Gets the maximum number of transactions for the current session.
  * @param[in]  http_session  http session handle
  * @param[out]  transaction_count  maximum transaction count
@@ -358,17 +310,13 @@ int http_session_get_max_transaction_count(http_session_h http_session, int *tra
  */
 
 /**
- * @internal
  * @addtogroup CAPI_NETWORK_HTTP_TRANSACTION_MODULE
  * @{
  */
 
 /**
- * @internal
  * @brief Open Http Transaction from the Http Session.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Open Http Transaction from the Http Session.
  * @param[in]  http_session  http session handle
  * @param[in]  method  http method
@@ -385,11 +333,8 @@ int http_session_get_max_transaction_count(http_session_h http_session, int *tra
 int http_open_transaction(http_session_h http_session, http_method_e method, http_transaction_h *http_transaction);
 
 /**
- * @internal
  * @brief Submit the Http request.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Submit the Http request.
  * @param[in]  http_transaction  The http transaction handle
  * @return 0 on success, otherwise negative error value
@@ -399,11 +344,8 @@ int http_open_transaction(http_session_h http_session, http_method_e method, htt
 int http_transaction_submit(http_transaction_h http_transaction);
 
 /**
- * @internal
  * @brief Close the Http Transaction.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Close the Http Transaction.
  * @param[in]  http_transaction  The http transaction handle
  * @return 0 on success, otherwise negative error value
@@ -412,43 +354,95 @@ int http_transaction_submit(http_transaction_h http_transaction);
  */
 int http_transaction_close(http_transaction_h http_transaction);
 
-int http_transaction_set_received_header_cb(http_transaction_h transaction, http_transaction_header_cb header_cb, void* user_data);
-
-int http_transaction_set_received_body_cb(http_transaction_h transaction, http_transaction_body_cb body_cb, void* user_data);
-
-int http_transaction_set_uploaded_cb(http_transaction_h transaction, http_transaction_write_cb write_cb, void* user_data);
-
-int http_transaction_set_completed_cb(http_transaction_h transaction, http_transaction_completed_cb completed_cb, void* user_data);
-
-int http_transaction_set_aborted_cb(http_transaction_h http_transaction, http_transaction_aborted_cb aborted_cb, void* user_data);
-
-int http_transaction_close_all(http_session_h session);
-
-
-/**
- * @internal
- * @brief Sets the progress callbacks.
+/*
+ * @brief Registers callback called when receive header.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
- * @details Sets the progress callbacks.
  * @param[in]  http_transaction  The http transaction handle
- * @param[in] upload_progress_cb  upload callback
- * @param[in] download_progress_cb download callback
+ * @param[in]  header_cb  The callback function to be called
+ * @param[in] user_data The user data passed to the callback function
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
  */
-int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_upload_progress_cb upload_progress_cb,
-															http_transaction_download_progress_cb download_progress_cb);
+int http_transaction_set_received_header_cb(http_transaction_h transaction, http_transaction_header_cb header_cb, void* user_data);
+
+/*
+ * @brief Registers callback called when receive body.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  body_cb  The callback function to be called
+ * @param[in] user_data The user data passed to the callback function
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ */
+int http_transaction_set_received_body_cb(http_transaction_h transaction, http_transaction_body_cb body_cb, void* user_data);
+
+/*
+ * @brief Registers callback called when write data.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  write_cb  The callback function to be called
+ * @param[in] user_data The user data passed to the callback function
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ */
+int http_transaction_set_uploaded_cb(http_transaction_h transaction, http_transaction_write_cb write_cb, void* user_data);
+
+/*
+ * @brief Registers callback called when transaction is completed.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  completed_cb  The callback function to be called
+ * @param[in] user_data The user data passed to the callback function
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ */
+int http_transaction_set_completed_cb(http_transaction_h transaction, http_transaction_completed_cb completed_cb, void* user_data);
+
+/*
+ * @brief Registers callback called when transaction is aborted.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  header_cb  The callback function to be called
+ * @param[in] user_data The user data passed to the callback function
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ */
+int http_transaction_set_aborted_cb(http_transaction_h http_transaction, http_transaction_aborted_cb aborted_cb, void* user_data);
+
+
+/*
+ * @brief Close all transaction.
+ * @since_tizen 3.0
+ * @param[in]  http_session  The http session handle
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_OPERATION_fAILED  Operation failed
+ */
+int http_transaction_close_all(http_session_h session);
+
 
 /**
- * @internal
+ * @brief Register the progress callbacks.
+ * @since_tizen 3.0
+ * @details Sets the progress callbacks.
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in] progress_cb download callback
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ */
+int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_progress_cb progress_cb, void* user_data);
+
+/**
  * @brief Sets the timeout in seconds that is the timeout for waiting the transaction. @n
  * A timeout value of zero means an infinite timeout.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Sets the timeout in seconds that is the timeout for waiting the transaction.
  * @param[in]  http_transaction  The http transaction handle
  * @param[in]  timeout  timeout in seconds
@@ -459,11 +453,8 @@ int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_t
 int http_transaction_set_timeout(http_transaction_h http_transaction, int timeout);
 
 /**
- * @internal
  * @brief Get the time out in seconds for the transaction.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Get the time out in seconds for the transaction.
  * @param[in]  http_transaction  The http transaction handle
  * @param[out]  timeout  timeout in seconds
@@ -474,11 +465,8 @@ int http_transaction_set_timeout(http_transaction_h http_transaction, int timeou
 int http_transaction_get_timeout(http_transaction_h http_transaction, int *timeout);
 
 /**
- * @internal
  * @brief Sets a user object to the instance of HTTP transaction.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Sets a user object to the instance of HTTP transaction.
  * @param[in]  http_transaction  The http transaction handle
  * @param[in]  user_object user object
@@ -489,11 +477,8 @@ int http_transaction_get_timeout(http_transaction_h http_transaction, int *timeo
 int http_transaction_set_user_object(http_transaction_h http_transaction, void *user_object);
 
 /**
- * @internal
  * @brief Gets a user object that is set to the instance of HTTP transaction.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Gets a user object that is set to the instance of HTTP transaction.
  * @param[in]  http_transaction  The http transaction handle
  * @param[out]  user_object  user object
@@ -504,11 +489,8 @@ int http_transaction_set_user_object(http_transaction_h http_transaction, void *
 int http_transaction_get_user_object(http_transaction_h http_transaction, void **user_object);
 
 /**
- * @internal
  * @brief Resumes the transaction after the http_transaction_cert_verifcation_required_cb event is invoked.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Resumes the transaction after the http_transaction_cert_verifcation_required_cb event is invoked.
  * @param[in]  http_transaction  The http transaction handle
  * @return 0 on success, otherwise negative error value
@@ -518,11 +500,8 @@ int http_transaction_get_user_object(http_transaction_h http_transaction, void *
 int http_transaction_resume(http_transaction_h http_transaction);
 
 /**
- * @internal
  * @brief Pauses the transaction after the http_transaction_cert_verifcation_required_cb event is invoked.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Pauses the transaction after the http_transaction_cert_verifcation_required_cb event is invoked.
  * @param[in]  http_transaction  The http transaction handle
  * @return 0 on success, otherwise negative error value
@@ -532,11 +511,8 @@ int http_transaction_resume(http_transaction_h http_transaction);
 int http_transaction_pause(http_transaction_h http_transaction, http_pause_state_e pause_state);
 
 /**
- * @internal
  * @brief Sets ready to write event for a transaction.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Sets ready to write event for a transaction.
  * @param[in]  http_transaction  The http transaction handle
  * @param[out] read_to_write enable/disable ready to write
@@ -547,11 +523,8 @@ int http_transaction_pause(http_transaction_h http_transaction, http_pause_state
 int http_transaction_set_ready_to_write(http_transaction_h http_transaction, bool read_to_write);
 
 /**
- * @internal
  * @brief Set the interface name.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Set the interface name.
  * @param[in]  http_transaction  The http transaction handle
  * @param[in] interface_name  interface name
@@ -562,11 +535,8 @@ int http_transaction_set_ready_to_write(http_transaction_h http_transaction, boo
 int http_transaction_set_interface_name(http_transaction_h http_transaction, const char *interface_name);
 
 /**
- * @internal
  * @brief Get the interface name.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Get the interface name.
  * @param[in]  http_transaction  The http transaction handle
  * @param[out]  interface_name  interface name
@@ -577,11 +547,8 @@ int http_transaction_set_interface_name(http_transaction_h http_transaction, con
 int http_transaction_get_interface_name(http_transaction_h http_transaction, char **interface_name);
 
 /**
- * @internal
  * @brief Sets the flag to verify a server certificate.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Get the interface name.
  * @param[in]  http_transaction  The http transaction handle
  * @param[in]  verify flag to verify a server certificate.
@@ -592,11 +559,8 @@ int http_transaction_get_interface_name(http_transaction_h http_transaction, cha
 int http_transaction_set_server_certificate_verification(http_transaction_h http_transaction, bool verify);
 
 /**
- * @internal
  * @brief Gets the flag to verify a server certificate.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Get the interface name.
  * @param[in]  http_transaction  The http transaction handle
  * @param[out]  verify flag to verify a server certificate.
@@ -607,11 +571,8 @@ int http_transaction_set_server_certificate_verification(http_transaction_h http
 int http_transaction_get_server_certificate_verification(http_transaction_h http_transaction, bool* verify);
 
 /**
- * @internal
  * @brief Adds a named field, which is a <@c fieldName, @c fieldValue> pair, to the current instance of Http Transaction.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Adds a named field, which is a <@c fieldName, @c fieldValue> pair, to the current instance of Http Transaction.
  * @param[in]  http_transaction  The http transaction handle
  * @param[in]  field_name  Http Header Field name
@@ -623,11 +584,8 @@ int http_transaction_get_server_certificate_verification(http_transaction_h http
 int http_header_add_field(http_transaction_h http_transaction, const char *field_name, const char* field_value);
 
 /**
- * @internal
  * @brief Remove the named field, which is a <@c fieldName, @c fieldValue> pair, from the current instance of Http Transaction.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Remove the named field, which is a <@c fieldName, @c fieldValue> pair, from the current instance of Http Transaction.
  * @param[in]  http_transaction  The http transaction handle
  * @param[in]  field_name  Http Header Field name
@@ -638,11 +596,8 @@ int http_header_add_field(http_transaction_h http_transaction, const char *field
 int http_header_remove_field(http_transaction_h http_transaction, const char *field_name);
 
 /**
- * @internal
  * @brief Get the Http Header Field value.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Get the Http Header Field value.
  * @param[in]  http_transaction  The http transaction handle
  * @param[in]  field_name  Http Header Field name
@@ -658,17 +613,13 @@ int http_header_get_field_value(http_transaction_h http_transaction, const char 
  */
 
 /**
- * @internal
  * @addtogroup CAPI_NETWORK_HTTP_REQUEST_MODULE
  * @{
  */
 
 /**
- * @internal
  * @brief Sets an HTTP method of the request header.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Sets an HTTP method of the request header.
  * @param[in]  http_transaction  The http transaction handle
  * @return 0 on success, otherwise negative error value
@@ -678,11 +629,8 @@ int http_header_get_field_value(http_transaction_h http_transaction, const char 
 int http_request_set_method(http_transaction_h http_transaction, http_method_e method);
 
 /**
- * @internal
  * @brief Get the Http method.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Get the Http method.
  * @param[in]  http_transaction  The http transaction handle
  * @param[out]  method method
@@ -693,11 +641,8 @@ int http_request_set_method(http_transaction_h http_transaction, http_method_e m
 int http_request_get_method(http_transaction_h http_transaction, http_method_e *method);
 
 /**
- * @internal
  * @brief Sets an HTTP version of the request header.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Sets an HTTP version of the request header.
  * @param[in]  http_transaction  The http transaction handle
  * @return 0 on success, otherwise negative error value
@@ -707,11 +652,8 @@ int http_request_get_method(http_transaction_h http_transaction, http_method_e *
 int http_request_set_version(http_transaction_h http_transaction, http_version_e version);
 
 /**
- * @internal
  * @brief Get the Http version.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Get the Http version.
  * @param[in]  http_transaction  The http transaction handle
  * @param[out]  version version
@@ -722,11 +664,8 @@ int http_request_set_version(http_transaction_h http_transaction, http_version_e
 int http_request_get_version(http_transaction_h http_transaction, http_version_e *version);
 
 /**
- * @internal
  * @brief Sets a URI of the request header.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Sets a URI of the request header.
  * @param[in]  http_transaction  The http transaction handle
  * @return 0 on success, otherwise negative error value
@@ -736,11 +675,8 @@ int http_request_get_version(http_transaction_h http_transaction, http_version_e
 int http_request_set_uri(http_transaction_h http_transaction, const char *host_uri);
 
 /**
- * @internal
  * @brief Get the uri.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Get the uri.
  * @param[in]  http_transaction  The http transaction handle
  * @param[out]  host_uri  host uri
@@ -751,11 +687,8 @@ int http_request_set_uri(http_transaction_h http_transaction, const char *host_u
 int http_request_get_uri(http_transaction_h http_transaction, char **host_uri);
 
 /**
- * @internal
  * @brief Sets the Accept-Encoding header field of HttpRequest.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Sets the Accept-Encoding header field of HttpRequest.
  * @param[in]  http_transaction  The http transaction handle
  * @param[in]  encoding  encoding
@@ -766,11 +699,8 @@ int http_request_get_uri(http_transaction_h http_transaction, char **host_uri);
 int http_request_set_accept_encoding(http_transaction_h http_transaction, const char *encoding);
 
 /**
- * @internal
  * @brief Get the Accept-Encoding header field of HttpRequest.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Get the Accept-Encoding header field of HttpRequest.
  * @param[in]  http_transaction  The http transaction handle
  * @param[out]  encoding  encoding
@@ -780,12 +710,12 @@ int http_request_set_accept_encoding(http_transaction_h http_transaction, const 
  */
 int http_request_get_accept_encoding(http_transaction_h http_transaction, char **encoding);
 
+int http_request_set_cookie(http_transaction_h http_transaction, const char *cookie);
+int http_request_get_cookie(http_transaction_h http_transaction, const char **cookie);
+
 /**
- * @internal
  * @brief Sets the request message body.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Sets the request message body.
  * @param[in]  http_transaction  The http transaction handle
  * @param[in]  body  message body data
@@ -800,17 +730,13 @@ int http_request_write_body(http_transaction_h http_transaction, const char *bod
  */
 
 /**
- * @internal
  * @addtogroup CAPI_NETWORK_HTTP_RESPONSE_MODULE
  * @{
  */
 
 /**
- * @internal
  * @brief Get the Http status code from Http Response.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Get the Http status code from Http Response.
  * @param[in]  http_transaction  The http transaction handle
  * @param[out]  status_code http status code
@@ -821,11 +747,8 @@ int http_request_write_body(http_transaction_h http_transaction, const char *bod
 int http_response_get_status_code(http_transaction_h http_transaction, http_status_code_e *status_code);
 
 /**
- * @internal
  * @brief Get the Http status text from Http Response.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Get the Http status text from Http Response.
  * @param[in]  http_transaction  The http transaction handle
  * @param[out]  status_text http status text
@@ -836,11 +759,8 @@ int http_response_get_status_code(http_transaction_h http_transaction, http_stat
 int http_response_get_status_text(http_transaction_h http_transaction, char **status_text);
 
 /**
- * @internal
  * @brief Get the Http version from Http Response.
  * @since_tizen 3.0
- * @privlevel platform
- * @privilege http://tizen.org/privilege/http.admin
  * @details Get the Http version from Http Response.
  * @param[in]  http_transaction  The http transaction handle
  * @param[out]  version version
