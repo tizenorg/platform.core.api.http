@@ -1,6 +1,6 @@
 Name:		capi-network-http
 Summary:	Http Framework
-Version:	0.0.3
+Version:	0.0.4
 Release:	0
 Group:		System/Network
 License:	Apache-2.0
@@ -61,7 +61,6 @@ make %{?_smp_mflags}
 
 mkdir -p %{buildroot}/usr/share/license
 cp LICENSE.APLv2.0 %{buildroot}/usr/share/license/capi-network-http
-cp LICENSE.APLv2.0 %{buildroot}/usr/share/license/capi-network-http-devel
 
 %post -p /sbin/ldconfig
 
@@ -73,19 +72,8 @@ cp LICENSE.APLv2.0 %{buildroot}/usr/share/license/capi-network-http-devel
 %{_libdir}/*.so.*
 /usr/share/license/capi-network-http
 %{_bindir}/http_test
-%ifarch %{arm}
-/etc/config/connectivity/sysinfo-http.xml
-%else
-%if 0%{?simulator}
-# Noop
-%else
-/etc/config/connectivity/sysinfo-http.xml
-%endif
-%endif
 
 %files devel
-%defattr(-,root,root,-)
 %{_includedir}/network/*.h
 %{_libdir}/pkgconfig/*.pc
 %{_libdir}/*.so
-/usr/share/license/capi-network-http-devel

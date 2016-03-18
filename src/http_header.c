@@ -44,7 +44,7 @@ struct curl_slist* _get_header_list(http_transaction_h http_transaction)
 	return header->header_list;
 }
 
-API int http_header_add_field(http_transaction_h http_transaction, const char *field_name, const char* field_value)
+API int http_transaction_header_add_field(http_transaction_h http_transaction, const char *field_name, const char* field_value)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -65,7 +65,7 @@ API int http_header_add_field(http_transaction_h http_transaction, const char *f
 	return HTTP_ERROR_NONE;
 }
 
-API int http_header_remove_field(http_transaction_h http_transaction, const char *field_name)
+API int http_transaction_header_remove_field(http_transaction_h http_transaction, const char *field_name)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -80,7 +80,7 @@ API int http_header_remove_field(http_transaction_h http_transaction, const char
 	return HTTP_ERROR_NONE;
 }
 
-API int http_header_get_field_value(http_transaction_h http_transaction, const char *field_name, char **field_value)
+API int http_transaction_header_get_field_value(http_transaction_h http_transaction, const char *field_name, char **field_value)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
