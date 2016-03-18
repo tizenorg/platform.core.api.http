@@ -44,7 +44,7 @@ struct curl_slist* _get_header_list(http_transaction_h http_transaction)
 	return header->header_list;
 }
 
-API int http_header_add_field(http_transaction_h http_transaction, const char *field_name, const char* field_value)
+API int http_transaction_header_add_field(http_transaction_h http_transaction, const char *field_name, const char* field_value)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -65,7 +65,7 @@ API int http_header_add_field(http_transaction_h http_transaction, const char *f
 	return HTTP_ERROR_NONE;
 }
 
-API int http_header_remove_field(http_transaction_h http_transaction, const char *field_name)
+API int http_transaction_header_remove_field(http_transaction_h http_transaction, const char *field_name)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -75,12 +75,16 @@ API int http_header_remove_field(http_transaction_h http_transaction, const char
 	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
 	__http_header_h *header = transaction->header;
 
-	g_hash_table_remove(header->hash_table, field_name);
-
-	return HTTP_ERROR_NONE;
+	if (g_hash_table_remove(header->hash_table, field_name)) {
+		return HTTP_ERROR_NONE;
+	}
+	else {
+		ERR("field_name doesn't exist!!");
+		return HTTP_ERROR_INVALID_OPERATION;
+	}
 }
 
-API int http_header_get_field_value(http_transaction_h http_transaction, const char *field_name, char **field_value)
+API int http_transaction_header_get_field_value(http_transaction_h http_transaction, const char *field_name, char **field_value)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -98,6 +102,10 @@ API int http_header_get_field_value(http_transaction_h http_transaction, const c
 	}
 
 	*field_value = g_hash_table_lookup(header->hash_table, field_name);
+	if (*field_value == NULL) {
+		ERR("filed_name doesn't exist!!");
+		return HTTP_ERROR_INVALID_OPERATION;
+	}
 
 	return HTTP_ERROR_NONE;
 }
