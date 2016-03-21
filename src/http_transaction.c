@@ -231,13 +231,15 @@ int _transaction_submit(gpointer user_data)
 		DBG("The write_event is %d.\n", write_event);
 	}
 
-	if (!write_event) {
+	if ((_get_method(request->method) == HTTP_METHOD_POST) && !write_event) {
 		gchar *body = NULL;
 
 		_read_request_body(transaction, &body);
 
-		curl_easy_setopt(transaction->easy_handle, CURLOPT_COPYPOSTFIELDS, body);
-		free(body);
+		if (body) {
+			curl_easy_setopt(transaction->easy_handle, CURLOPT_COPYPOSTFIELDS, body);
+			free(body);
+		}
 	}
 
 	if (write_event) {

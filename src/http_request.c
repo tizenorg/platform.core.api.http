@@ -230,13 +230,17 @@ int _read_request_body(http_transaction_h http_transaction, char **body)
 	size_t new_len = 0;
 	gchar* ptr = NULL;
 
+	len = g_queue_get_length(request->body_queue);
+	if (len == 0) {
+		*body = NULL;
+		return HTTP_ERROR_NONE;
+	}
+
 	*body = malloc(curr_len + 1);
 	if (*body == NULL) {
 		DBG("malloc() failed\n");
 		return HTTP_ERROR_OPERATION_FAILED;
 	}
-
-	len = g_queue_get_length(request->body_queue);
 
 	for (index = 0; index < len; index++) {
 
