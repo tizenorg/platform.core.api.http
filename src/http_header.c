@@ -60,7 +60,7 @@ API int http_transaction_header_add_field(http_transaction_h http_transaction, c
 		header->hash_table = g_hash_table_new(g_str_hash, g_str_equal);
 	}
 
-	g_hash_table_insert(header->hash_table, (char*)field_name, (char*)field_value);
+	g_hash_table_insert(header->hash_table, g_strdup(field_name), g_strdup(field_value));
 
 	return HTTP_ERROR_NONE;
 }
@@ -74,8 +74,17 @@ API int http_transaction_header_remove_field(http_transaction_h http_transaction
 
 	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
 	__http_header_h *header = transaction->header;
+	gpointer orig_key = NULL;
+	gpointer orig_value = NULL;
 
+	g_hash_table_lookup_extended(header->hash_table, field_name, &orig_key, &orig_value);
 	if (g_hash_table_remove(header->hash_table, field_name)) {
+		if (orig_key)
+			g_free(orig_key);
+
+		if (orig_value)
+			g_free(orig_value);
+
 		return HTTP_ERROR_NONE;
 	}
 	else {
@@ -95,17 +104,19 @@ API int http_transaction_header_get_field_value(http_transaction_h http_transact
 
 	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
 	__http_header_h *header = transaction->header;
+	const char *value;
 
 	if (header->hash_table == NULL) {
 		*field_value = NULL;
 		return HTTP_ERROR_INVALID_OPERATION;
 	}
 
-	*field_value = g_hash_table_lookup(header->hash_table, field_name);
-	if (*field_value == NULL) {
+	value = g_hash_table_lookup(header->hash_table, field_name);
+	if (value == NULL) {
 		ERR("filed_name doesn't exist!!");
 		return HTTP_ERROR_INVALID_OPERATION;
 	}
+	*field_value = g_strdup(value);
 
 	return HTTP_ERROR_NONE;
 }

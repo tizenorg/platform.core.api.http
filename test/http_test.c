@@ -16,6 +16,7 @@
 
 
 #include <stdio.h>
+#include <string.h>
 #include <glib.h>
 #include <gio/gio.h>
 
@@ -28,6 +29,8 @@
 
 FILE* fp1 = NULL;
 FILE* fp2 = NULL;
+
+http_session_h session = NULL;
 
 /////////////////Callbacks////////////////////////////////////////////////////////////////////////////
 void __transaction_header_cb(http_transaction_h transaction, char *header, size_t header_len, void *user_data)
@@ -59,6 +62,7 @@ void __transaction_completed_cb(http_transaction_h transaction, void *user_data)
 	ret = http_transaction_request_get_uri(transaction, &uri);
 	ret = http_transaction_response_get_status_code(transaction, &status);
 
+	http_transaction_header_remove_field(transaction, "Content-Length");
 	DBG("%s - status(%d)\n", uri, status);
 	ret = http_transaction_destroy(transaction);
 	if (ret == HTTP_ERROR_NONE) DBG("Success to close transaction\n");
@@ -96,22 +100,42 @@ int test_http_deinit(void)
 	else return 0;
 }
 
+int test_http_session_create(void)
+{
+	int ret;
+	int session_mode;
+
+	printf("Select session mode(0: NORMAL 1: PIPELINING): ");
+	ret = scanf("%d", &session_mode);
+
+	ret = http_session_create(session_mode, &session);
+	if (ret != HTTP_ERROR_NONE) {
+		ERR("Fail to create session", ret);
+		return 0;
+	}
+	return 1;
+}
+
+int test_http_session_destroy(void)
+{
+	int ret = http_session_destroy(session);
+	if (ret != HTTP_ERROR_NONE) {
+		ERR("Fail to destroy session", ret);
+		return 0;
+	}
+
+	return 1;
+}
+
 int test_simple_get(void)
 {
 	char uri[1024];
 	int ret;
-	http_session_h session = NULL;
 	http_transaction_h transaction = NULL;
 	http_method_e method;
 
 	printf("Input uri: ");
 	ret = scanf("%1023s", uri);
-
-	ret = http_session_create(HTTP_SESSION_MODE_NORMAL, &session);
-	if (ret != 0) {
-		ERR("Fail to create session", ret);
-		return 0;
-	}
 
 	ret = http_session_open_transaction(session, HTTP_METHOD_GET, &transaction);
 	if (ret != 0) {
@@ -140,22 +164,12 @@ int test_simple_get(void)
 int test_multiple_get(void)
 {
 	int ret;
-	http_session_h session = NULL;
 	http_transaction_h transaction[10];
-	int count, session_mode;
+	int count;
 	int i;
 
 	printf("Input count of transactions(1~10): ");
 	ret = scanf("%d", &count);
-
-	printf("Select session mode(0: NORMAL 1: PIPELINING): ");
-	ret = scanf("%d", &session_mode);
-
-	ret = http_session_create(session_mode, &session);
-	if (ret != 0) {
-		ERR("Fail to create session", ret);
-		return 0;
-	}
 
 	for (i = 0; i < count; i++) {
 		char uri[1024];
@@ -178,6 +192,36 @@ int test_multiple_get(void)
 	return 1;
 }
 
+int test_simple_post(void)
+{
+	int ret;
+	http_transaction_h transaction;
+	const char* post_msg = "name=tizen&project=capi-network-curl";
+	char field_value[15];
+
+	ret = http_session_open_transaction(session, HTTP_METHOD_POST, &transaction);
+	if (ret != 0) {
+		ERR("Fail to open transaction", ret);
+		return 0;
+	}
+	ret = http_transaction_request_set_uri(transaction, "http://posttestserver.com/post.php");
+	if (ret != 0) {
+		ERR("Fail to set URI", ret);
+		return 0;
+	}
+	http_transaction_set_ready_to_write(transaction, TRUE);
+	http_transaction_request_write_body(transaction, post_msg);
+
+	sprintf(field_value, "%d", strlen(post_msg));
+	printf("[dbg] post size (%s)\n", field_value);
+	http_transaction_header_add_field(transaction, "Content-Length", field_value);
+
+	_register_callbacks(transaction);
+	http_transaction_submit(transaction);
+
+	return 1;
+}
+
 gboolean test_thread(GIOChannel *source, GIOCondition condition, gpointer data)
 {
     int rv;
@@ -195,10 +239,12 @@ gboolean test_thread(GIOChannel *source, GIOCondition condition, gpointer data)
         printf("Options..\n");
         printf("1       - Initialize\n");
         printf("2       - Deinitialize\n");
-        printf("3       - Simple GET\n");
-        printf("4       - Multiple GET\n");
-        printf("5       - \n");
-        printf("6       - \n");
+        printf("3       - Create session\n");
+        printf("4       - Destroy session\n");
+        printf("5       - Simple GET\n");
+        printf("6       - Multiple GET\n");
+        printf("7       - Simple POST\n");
+        printf("8       - \n");
         printf("0       - Exit \n");
         printf("ENTER  - Show options menu.......\n");
     }
@@ -211,14 +257,19 @@ gboolean test_thread(GIOChannel *source, GIOCondition condition, gpointer data)
     	rv = test_http_deinit();
         break;
     case '3':
-    	rv = test_simple_get();
+    	rv = test_http_session_create();
         break;
     case '4':
-    	rv = test_multiple_get();
+    	rv = test_http_session_destroy();
         break;
     case '5':
+    	rv = test_simple_get();
         break;
     case '6':
+    	rv = test_multiple_get();
+        break;
+    case '7':
+    	rv = test_simple_post();
         break;
     }
 
