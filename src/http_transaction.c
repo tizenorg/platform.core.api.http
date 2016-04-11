@@ -205,10 +205,8 @@ int _transaction_submit(gpointer user_data)
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_WRITEFUNCTION, __handle_body_cb);
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_WRITEDATA, transaction);
 
-	http_transaction_header_get_field_value(transaction, "Content-Length", &field_value);
-	if (field_value) {
+	if (http_transaction_header_get_field_value(transaction, "Content-Length", &field_value) == HTTP_ERROR_NONE) {
 		content_len = atoi(field_value);
-
 		if (content_len > 0) {
 			curl_easy_setopt(transaction->easy_handle, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)(content_len));
 			DBG("Set the Content-Length(%d).", content_len);
