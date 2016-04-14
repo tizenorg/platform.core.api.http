@@ -19,6 +19,8 @@
 
 API int http_transaction_request_set_method(http_transaction_h http_transaction, http_method_e method)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 
@@ -37,6 +39,8 @@ API int http_transaction_request_set_method(http_transaction_h http_transaction,
 
 API int http_transaction_request_get_method(http_transaction_h http_transaction, http_method_e *method)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(method == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -52,6 +56,8 @@ API int http_transaction_request_get_method(http_transaction_h http_transaction,
 
 API int http_transaction_request_set_version(http_transaction_h http_transaction, http_version_e version)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 
@@ -65,6 +71,8 @@ API int http_transaction_request_set_version(http_transaction_h http_transaction
 
 API int http_transaction_request_get_version(http_transaction_h http_transaction, http_version_e *version)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(version == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -80,6 +88,8 @@ API int http_transaction_request_get_version(http_transaction_h http_transaction
 
 API int http_transaction_request_set_uri(http_transaction_h http_transaction, const char *host_uri)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(host_uri == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -95,6 +105,8 @@ API int http_transaction_request_set_uri(http_transaction_h http_transaction, co
 
 API int http_transaction_request_get_uri(http_transaction_h http_transaction, char **host_uri)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(host_uri == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -115,6 +127,8 @@ API int http_transaction_request_get_uri(http_transaction_h http_transaction, ch
 
 API int http_transaction_request_set_accept_encoding(http_transaction_h http_transaction, const char *encoding)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(encoding == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -130,6 +144,8 @@ API int http_transaction_request_set_accept_encoding(http_transaction_h http_tra
 
 API int http_transaction_request_get_accept_encoding(http_transaction_h http_transaction, char **encoding)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(encoding == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -149,6 +165,8 @@ API int http_transaction_request_get_accept_encoding(http_transaction_h http_tra
 
 API int http_transaction_request_set_cookie(http_transaction_h http_transaction, const char *cookie)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(cookie == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -164,6 +182,8 @@ API int http_transaction_request_set_cookie(http_transaction_h http_transaction,
 
 API int http_transaction_request_get_cookie(http_transaction_h http_transaction, const char **cookie)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(cookie == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -183,6 +203,8 @@ API int http_transaction_request_get_cookie(http_transaction_h http_transaction,
 
 API int http_transaction_request_write_body(http_transaction_h http_transaction, const char *body)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(body == NULL, HTTP_ERROR_INVALID_PARAMETER,

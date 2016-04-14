@@ -30,27 +30,37 @@
 #define THREAD_ID        pthread_self()
 
 /* This array will store all of the mutexes available to OpenSSL. */
-static MUTEX_TYPE *mutex_buf= NULL;
+static MUTEX_TYPE *mutex_buf = NULL;
+static bool is_init = false;
+
+bool _http_is_init(void)
+{
+	return is_init;
+}
+
+static void __http_set_init(bool init)
+{
+	is_init = init;
+}
 
 http_method_e _get_method(gchar* method)
 {
-	if (g_strcmp0(method, "GET") == 0) {
+	if (g_strcmp0(method, "GET") == 0)
 		return HTTP_METHOD_GET;
-	} else if (g_strcmp0(method, "OPTIONS") == 0) {
+	else if (g_strcmp0(method, "OPTIONS") == 0)
 		return HTTP_METHOD_OPTIONS;
-	} else if (g_strcmp0(method, "HEAD") == 0) {
+	else if (g_strcmp0(method, "HEAD") == 0)
 		return HTTP_METHOD_HEAD;
-	} else if (g_strcmp0(method, "DELETE") == 0) {
+	else if (g_strcmp0(method, "DELETE") == 0)
 		return HTTP_METHOD_DELETE;
-	} else if (g_strcmp0(method, "TRACE") == 0) {
+	else if (g_strcmp0(method, "TRACE") == 0)
 		return HTTP_METHOD_TRACE;
-	} else if (g_strcmp0(method, "POST") == 0) {
+	else if (g_strcmp0(method, "POST") == 0)
 		return HTTP_METHOD_POST;
-	} else if (g_strcmp0(method, "PUT") == 0) {
+	else if (g_strcmp0(method, "PUT") == 0)
 		return HTTP_METHOD_PUT;
-	} else if (g_strcmp0(method, "CONNECT") == 0) {
+	else if (g_strcmp0(method, "CONNECT") == 0)
 		return HTTP_METHOD_CONNECT;
-	}
 
 	return HTTP_METHOD_GET;
 }
@@ -148,9 +158,8 @@ gchar* _get_proxy()
 	}
 
 CATCH:
-	if (connection_destroy(connection) < 0) {
+	if (connection_destroy(connection) < 0)
 		DBG("Fail to destroy network handle\n");
-	}
 
 	return proxy_addr;
 }
@@ -176,9 +185,9 @@ int thread_setup(void)
 	if (!mutex_buf)
 		return 0;
 
-	for (index = 0;  index < CRYPTO_num_locks();  index++) {
+	for (index = 0;  index < CRYPTO_num_locks();  index++)
 		MUTEX_SETUP(mutex_buf[index]);
-	}
+
 	CRYPTO_set_id_callback(id_function);
 	CRYPTO_set_locking_callback(locking_function);
 
@@ -195,9 +204,8 @@ int thread_cleanup(void)
 	CRYPTO_set_id_callback(NULL);
 	CRYPTO_set_locking_callback(NULL);
 
-	for (index = 0;  index < CRYPTO_num_locks();  index++) {
+	for (index = 0;  index < CRYPTO_num_locks();  index++)
 		MUTEX_CLEANUP(mutex_buf[index]);
-	}
 
 	free(mutex_buf);
 	mutex_buf = NULL;
@@ -207,7 +215,12 @@ int thread_cleanup(void)
 
 API int http_init(void)
 {
+	_retvm_if(_http_is_init(), HTTP_ERROR_INVALID_OPERATION,
+			"http is already initialized!!");
+
 	int ret = 0;
+
+	__http_set_init(true);
 
 	if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
 		DBG("curl_global_init failed, so returning!\n");
@@ -225,7 +238,12 @@ API int http_init(void)
 
 API int http_deinit(void)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http is already deinitialized!!");
+
 	int ret = 0;
+
+	__http_set_init(false);
 
 	ret = thread_cleanup();
 	if (!ret) {
