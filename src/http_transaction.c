@@ -27,7 +27,6 @@ void _add_transaction_to_list(http_transaction_h http_transaction)
 void _remove_transaction_from_list(http_transaction_h http_transaction)
 {
 	transaction_list = g_slist_remove(transaction_list, http_transaction);
-	//g_free(http_transaction);
 }
 
 void _remove_transaction_list(void)
@@ -166,13 +165,13 @@ int _transaction_submit(gpointer user_data)
 	if (request->cookie)
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_COOKIE, request->cookie);
 
-	//The connection timeout is 30s. (default)
+	/* The connection timeout is 30s. (default) */
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_CONNECTTIMEOUT, _HTTP_DEFAULT_CONNECTION_TIMEOUT);
 
 	if (transaction->timeout > 0) {
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_TIMEOUT, transaction->timeout);
 	} else if (transaction->timeout == 0) {
-		//Set the transaction timeout. The timeout includes connection timeout.
+		/* Set the transaction timeout. The timeout includes connection timeout. */
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_LOW_SPEED_LIMIT, 1L);
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_LOW_SPEED_TIME, 30L);
 	}
@@ -205,10 +204,8 @@ int _transaction_submit(gpointer user_data)
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_WRITEFUNCTION, __handle_body_cb);
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_WRITEDATA, transaction);
 
-	http_transaction_header_get_field_value(transaction, "Content-Length", &field_value);
-	if (field_value) {
+	if (http_transaction_header_get_field_value(transaction, "Content-Length", &field_value) == HTTP_ERROR_NONE) {
 		content_len = atoi(field_value);
-
 		if (content_len > 0) {
 			curl_easy_setopt(transaction->easy_handle, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)(content_len));
 			DBG("Set the Content-Length(%d).", content_len);
@@ -285,8 +282,8 @@ void* thread_callback(void *user_data)
 
 API int http_session_open_transaction(http_session_h http_session, http_method_e method, http_transaction_h *http_transaction)
 {
-	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
-			"parameter(http_session) is NULL\n");
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION, "http isn't initialized");
+	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER, "parameter(http_session) is NULL\n");
 
 	__http_transaction_h *transaction = NULL;
 
@@ -353,6 +350,8 @@ API int http_session_open_transaction(http_session_h http_session, http_method_e
 
 API int http_transaction_submit(http_transaction_h http_transaction)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL");
 
@@ -367,6 +366,8 @@ API int http_transaction_submit(http_transaction_h http_transaction)
 
 API int http_transaction_destroy(http_transaction_h http_transaction)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 
@@ -473,10 +474,12 @@ API int http_transaction_destroy(http_transaction_h http_transaction)
 
 API int http_transaction_pause(http_transaction_h http_transaction, http_pause_type_e pause_type)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(pause_type < HTTP_PAUSE_RECV || pause_type > HTTP_PAUSE_ALL, HTTP_ERROR_INVALID_PARAMETER,
-				"Wrong pause state \n");
+			"Wrong pause state \n");
 
 	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
 	int ret = 0;
@@ -492,6 +495,8 @@ API int http_transaction_pause(http_transaction_h http_transaction, http_pause_t
 
 API int http_transaction_resume(http_transaction_h http_transaction)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 
@@ -510,6 +515,8 @@ API int http_transaction_resume(http_transaction_h http_transaction)
 
 API int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_progress_cb progress_cb, void* user_data)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(progress_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -525,6 +532,8 @@ API int http_transaction_set_progress_cb(http_transaction_h http_transaction, ht
 
 API int http_transaction_set_received_header_cb(http_transaction_h http_transaction, http_transaction_header_cb header_cb, void* user_data)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(header_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -540,6 +549,8 @@ API int http_transaction_set_received_header_cb(http_transaction_h http_transact
 
 API int http_transaction_set_received_body_cb(http_transaction_h http_transaction, http_transaction_body_cb body_cb, void* user_data)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(body_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -555,6 +566,8 @@ API int http_transaction_set_received_body_cb(http_transaction_h http_transactio
 
 API int http_transaction_set_uploaded_cb(http_transaction_h http_transaction, http_transaction_write_cb write_cb, void* user_data)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(write_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -570,6 +583,8 @@ API int http_transaction_set_uploaded_cb(http_transaction_h http_transaction, ht
 
 API int http_transaction_set_completed_cb(http_transaction_h http_transaction, http_transaction_completed_cb completed_cb, void* user_data)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(completed_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -585,6 +600,8 @@ API int http_transaction_set_completed_cb(http_transaction_h http_transaction, h
 
 API int http_transaction_set_aborted_cb(http_transaction_h http_transaction, http_transaction_aborted_cb aborted_cb,  void* user_data)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			 "parameter(http_transaction) is NULL\n");
 	_retvm_if(aborted_cb == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -599,6 +616,8 @@ API int http_transaction_set_aborted_cb(http_transaction_h http_transaction, htt
 
 API int http_transaction_unset_progress_cb(http_transaction_h http_transaction)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 
@@ -610,6 +629,8 @@ API int http_transaction_unset_progress_cb(http_transaction_h http_transaction)
 
 API int http_transaction_set_timeout(http_transaction_h http_transaction, int timeout)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 
@@ -622,6 +643,8 @@ API int http_transaction_set_timeout(http_transaction_h http_transaction, int ti
 
 API int http_transaction_get_timeout(http_transaction_h http_transaction, int *timeout)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(timeout == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -636,6 +659,8 @@ API int http_transaction_get_timeout(http_transaction_h http_transaction, int *t
 
 API int http_transaction_set_interface_name(http_transaction_h http_transaction, const char *interface_name)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(interface_name == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -650,6 +675,8 @@ API int http_transaction_set_interface_name(http_transaction_h http_transaction,
 
 API int http_transaction_get_interface_name(http_transaction_h http_transaction, char **interface_name)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(interface_name == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -668,6 +695,8 @@ API int http_transaction_get_interface_name(http_transaction_h http_transaction,
 
 API int http_transaction_set_ready_to_write(http_transaction_h http_transaction, bool read_to_write)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 
@@ -680,6 +709,8 @@ API int http_transaction_set_ready_to_write(http_transaction_h http_transaction,
 
 API int http_transaction_get_server_certificate_verification(http_transaction_h http_transaction, bool* verify)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 
@@ -692,6 +723,8 @@ API int http_transaction_get_server_certificate_verification(http_transaction_h 
 
 API int http_transaction_set_server_certificate_verification(http_transaction_h http_transaction, bool verify)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 
@@ -704,6 +737,8 @@ API int http_transaction_set_server_certificate_verification(http_transaction_h 
 
 API int http_session_destroy_all_transactions(http_session_h http_session)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
 

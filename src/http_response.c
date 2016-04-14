@@ -39,7 +39,6 @@ void __parse_response_header(char *buffer, size_t written, gpointer user_data)
 	__http_response_h*response = (__http_response_h *)transaction->response;
 
 	char status_code[HTTP_STATUS_CODE_SIZE] = {0, };
-	//char reason_phrase[HTTP_REASON_PHRASE_SIZE] = {0, };
 	char* start = NULL;
 	char* end = NULL;
 
@@ -67,6 +66,8 @@ void __parse_response_header(char *buffer, size_t written, gpointer user_data)
 
 API int http_transaction_response_get_status_code(http_transaction_h http_transaction, http_status_code_e *status_code)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(status_code == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -82,6 +83,8 @@ API int http_transaction_response_get_status_code(http_transaction_h http_transa
 
 API int http_transaction_response_get_status_text(http_transaction_h http_transaction, char **status_text)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(status_text == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -97,6 +100,8 @@ API int http_transaction_response_get_status_text(http_transaction_h http_transa
 
 API int http_transaction_response_get_version(http_transaction_h http_transaction, http_version_e *version)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(version == NULL, HTTP_ERROR_INVALID_PARAMETER,

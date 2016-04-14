@@ -250,13 +250,10 @@ typedef void (*http_transaction_progress_cb)(http_transaction_h http_transaction
 /**
  * @brief Initializes the Http module.
  * @since_tizen 3.0
- * @privlevel public
- * @privilege %http://tizen.org/privilege/internet
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_OPERATION_FAILED Operation failed
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
- * @retval  #HTTP_ERROR_PERMISSION_DENIED Permission denied
  * @see		http_deinit()
  */
 int http_init(void);
@@ -284,12 +281,14 @@ int http_deinit(void);
 /**
  * @brief Creates the Http session handle.
  * @since_tizen 3.0
- * @remarks The @a http_session should be released using http_session_destroy().
+ * @remarks The @a http_session should be released using http_session_destroy(). \
+ *			Opened transactions can't be submitted after destroing session handle.
  * @param[in]   mode            The http session mode
  * @param[out]  http_session	The http session handle
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_OUT_OF_MEMORY  Out of memory
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  * @see 	http_session_destroy()
@@ -303,6 +302,7 @@ int http_session_create(http_session_mode_e mode, http_session_h *http_session);
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  * @see     http_session_create()
  */
@@ -318,6 +318,7 @@ int http_session_destroy(http_session_h http_session);
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_OUT_OF_MEMORY  Out of memory
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
@@ -331,6 +332,7 @@ int http_session_open_transaction(http_session_h http_session, http_method_e met
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  * @see		http_session_get_auto_redirection()
  */
@@ -344,6 +346,7 @@ int http_session_set_auto_redirection(http_session_h http_session, bool auto_red
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  * @see     http_session_set_auto_redirection()
  */
@@ -357,6 +360,7 @@ int http_session_get_auto_redirection(http_session_h http_session, bool *auto_re
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_session_get_active_transaction_count(http_session_h http_session, int *active_transaction_count);
@@ -369,6 +373,7 @@ int http_session_get_active_transaction_count(http_session_h http_session, int *
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_session_get_max_transaction_count(http_session_h http_session, int *transaction_count);
@@ -380,6 +385,7 @@ int http_session_get_max_transaction_count(http_session_h http_session, int *tra
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_OPERATION_fAILED  Operation failed
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
@@ -396,12 +402,15 @@ int http_session_destroy_all_transactions(http_session_h http_session);
 /**
  * @brief Submits the Http request.
  * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/internet
  * @param[in]  http_transaction  The http transaction handle
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
  * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ * @retval  #HTTP_ERROR_PERMISSION_DENIED Permission denied
  */
 int http_transaction_submit(http_transaction_h http_transaction);
 
@@ -414,6 +423,7 @@ int http_transaction_submit(http_transaction_h http_transaction);
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  * @see		http_transaction_create()
  */
@@ -428,6 +438,7 @@ int http_transaction_destroy(http_transaction_h http_transaction);
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_received_header_cb(http_transaction_h http_transaction, http_transaction_header_cb header_cb, void* user_data);
@@ -441,6 +452,7 @@ int http_transaction_set_received_header_cb(http_transaction_h http_transaction,
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_received_body_cb(http_transaction_h http_transaction, http_transaction_body_cb body_cb, void* user_data);
@@ -454,6 +466,7 @@ int http_transaction_set_received_body_cb(http_transaction_h http_transaction, h
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_uploaded_cb(http_transaction_h http_transaction, http_transaction_write_cb write_cb, void* user_data);
@@ -467,6 +480,7 @@ int http_transaction_set_uploaded_cb(http_transaction_h http_transaction, http_t
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_completed_cb(http_transaction_h http_transaction, http_transaction_completed_cb completed_cb, void* user_data);
@@ -480,6 +494,7 @@ int http_transaction_set_completed_cb(http_transaction_h http_transaction, http_
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_aborted_cb(http_transaction_h http_http_transaction, http_transaction_aborted_cb aborted_cb, void* user_data);
@@ -495,6 +510,7 @@ int http_transaction_set_aborted_cb(http_transaction_h http_http_transaction, ht
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_progress_cb progress_cb, void* user_data);
@@ -509,6 +525,7 @@ int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_t
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_timeout(http_transaction_h http_transaction, int timeout);
@@ -521,6 +538,7 @@ int http_transaction_set_timeout(http_transaction_h http_transaction, int timeou
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_get_timeout(http_transaction_h http_transaction, int *timeout);
@@ -532,6 +550,7 @@ int http_transaction_get_timeout(http_transaction_h http_transaction, int *timeo
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_OPERATION_FAILED  Operation failed
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
@@ -545,6 +564,7 @@ int http_transaction_resume(http_transaction_h http_transaction);
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_OPERATION_FAILED  Operation failed
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
@@ -558,6 +578,7 @@ int http_transaction_pause(http_transaction_h http_transaction, http_pause_type_
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_ready_to_write(http_transaction_h http_transaction, bool read_to_write);
@@ -570,6 +591,7 @@ int http_transaction_set_ready_to_write(http_transaction_h http_transaction, boo
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_interface_name(http_transaction_h http_transaction, const char *interface_name);
@@ -583,6 +605,7 @@ int http_transaction_set_interface_name(http_transaction_h http_transaction, con
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_get_interface_name(http_transaction_h http_transaction, char **interface_name);
@@ -596,6 +619,7 @@ int http_transaction_get_interface_name(http_transaction_h http_transaction, cha
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_server_certificate_verification(http_transaction_h http_transaction, bool verify);
@@ -608,6 +632,7 @@ int http_transaction_set_server_certificate_verification(http_transaction_h http
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_get_server_certificate_verification(http_transaction_h http_transaction, bool* verify);
@@ -622,6 +647,7 @@ int http_transaction_get_server_certificate_verification(http_transaction_h http
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_header_add_field(http_transaction_h http_transaction, const char *field_name, const char* field_value);
@@ -674,6 +700,7 @@ int http_transaction_header_get_field_value(http_transaction_h http_transaction,
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_request_set_method(http_transaction_h http_transaction, http_method_e method);
@@ -686,6 +713,7 @@ int http_transaction_request_set_method(http_transaction_h http_transaction, htt
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_request_get_method(http_transaction_h http_transaction, http_method_e *method);
@@ -699,6 +727,7 @@ int http_transaction_request_get_method(http_transaction_h http_transaction, htt
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_request_set_version(http_transaction_h http_transaction, http_version_e version);
@@ -712,6 +741,7 @@ int http_transaction_request_set_version(http_transaction_h http_transaction, ht
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_request_get_version(http_transaction_h http_transaction, http_version_e *version);
@@ -726,6 +756,7 @@ int http_transaction_request_get_version(http_transaction_h http_transaction, ht
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_request_set_uri(http_transaction_h http_transaction, const char *host_uri);
@@ -739,6 +770,7 @@ int http_transaction_request_set_uri(http_transaction_h http_transaction, const 
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_request_get_uri(http_transaction_h http_transaction, char **host_uri);
@@ -753,6 +785,7 @@ int http_transaction_request_get_uri(http_transaction_h http_transaction, char *
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_request_set_accept_encoding(http_transaction_h http_transaction, const char *encoding);
@@ -766,6 +799,7 @@ int http_transaction_request_set_accept_encoding(http_transaction_h http_transac
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_request_get_accept_encoding(http_transaction_h http_transaction, char **encoding);
@@ -779,6 +813,7 @@ int http_transaction_request_get_accept_encoding(http_transaction_h http_transac
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_request_set_cookie(http_transaction_h http_transaction, const char *cookie);
@@ -792,18 +827,22 @@ int http_transaction_request_set_cookie(http_transaction_h http_transaction, con
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_request_get_cookie(http_transaction_h http_transaction, const char **cookie);
 
 /**
- * @brief Sets the request message body.
+ * @brief Writes the request message body.
+ * @details This function writes the request message body in the internal queue. \n
+ *			The written queue for request body is uploaded after invoking http_transaction_submit() 
  * @since_tizen 3.0
  * @param[in]  http_transaction The http transaction handle
  * @param[in]  body  			The message body data
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_request_write_body(http_transaction_h http_transaction, const char *body);
@@ -825,6 +864,7 @@ int http_transaction_request_write_body(http_transaction_h http_transaction, con
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_response_get_status_code(http_transaction_h http_transaction, http_status_code_e *status_code);
@@ -838,6 +878,7 @@ int http_transaction_response_get_status_code(http_transaction_h http_transactio
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_response_get_status_text(http_transaction_h http_transaction, char **status_text);
@@ -850,6 +891,7 @@ int http_transaction_response_get_status_text(http_transaction_h http_transactio
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_response_get_version(http_transaction_h http_transaction, http_version_e *version);
