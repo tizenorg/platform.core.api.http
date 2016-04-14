@@ -226,6 +226,8 @@ int __handle_timer_cb(CURLM *curl_multi, long timeout_ms, void *user_data)
 
 API int http_session_create(http_session_mode_e mode, http_session_h *http_session)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
 
@@ -259,6 +261,8 @@ API int http_session_create(http_session_mode_e mode, http_session_h *http_sessi
 
 API int http_session_destroy(http_session_h http_session)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
 
@@ -280,6 +284,8 @@ API int http_session_destroy(http_session_h http_session)
 
 API int http_session_set_auto_redirection(http_session_h http_session, bool auto_redirection)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
 
@@ -292,6 +298,8 @@ API int http_session_set_auto_redirection(http_session_h http_session, bool auto
 
 API int http_session_get_auto_redirection(http_session_h http_session, bool *auto_redirect)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
 	_retvm_if(auto_redirect == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -306,6 +314,8 @@ API int http_session_get_auto_redirection(http_session_h http_session, bool *aut
 
 API int http_session_get_active_transaction_count(http_session_h http_session, int *active_transaction_count)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
 	_retvm_if(active_transaction_count == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -320,6 +330,8 @@ API int http_session_get_active_transaction_count(http_session_h http_session, i
 
 API int http_session_get_max_transaction_count(http_session_h http_session, int *transaction_count)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_session == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_session) is NULL\n");
 	_retvm_if(transaction_count == NULL, HTTP_ERROR_INVALID_PARAMETER,

@@ -46,6 +46,8 @@ struct curl_slist* _get_header_list(http_transaction_h http_transaction)
 
 API int http_transaction_header_add_field(http_transaction_h http_transaction, const char *field_name, const char* field_value)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(field_name == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -67,6 +69,8 @@ API int http_transaction_header_add_field(http_transaction_h http_transaction, c
 
 API int http_transaction_header_remove_field(http_transaction_h http_transaction, const char *field_name)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(field_name == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -86,6 +90,8 @@ API int http_transaction_header_remove_field(http_transaction_h http_transaction
 
 API int http_transaction_header_get_field_value(http_transaction_h http_transaction, const char *field_name, char **field_value)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
 	_retvm_if(field_name == NULL, HTTP_ERROR_INVALID_PARAMETER,
