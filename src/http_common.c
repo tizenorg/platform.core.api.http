@@ -31,6 +31,17 @@
 
 /* This array will store all of the mutexes available to OpenSSL. */
 static MUTEX_TYPE *mutex_buf= NULL;
+static bool is_init = false;
+
+bool _http_is_init(void)
+{
+	return is_init;
+}
+
+static void __http_set_init(bool init)
+{
+	is_init = init;
+}
 
 http_method_e _get_method(gchar* method)
 {
@@ -207,7 +218,12 @@ int thread_cleanup(void)
 
 API int http_init(void)
 {
+	_retvm_if(_http_is_init(), HTTP_ERROR_INVALID_OPERATION,
+			"http is already initialized!!");
+
 	int ret = 0;
+
+	__http_set_init(true);
 
 	if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
 		DBG("curl_global_init failed, so returning!\n");
@@ -225,7 +241,12 @@ API int http_init(void)
 
 API int http_deinit(void)
 {
+	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
+			"http is already deinitialized!!");
+
 	int ret = 0;
+
+	__http_set_init(false);
 
 	ret = thread_cleanup();
 	if (!ret) {
