@@ -30,7 +30,7 @@ FILE* fp1 = NULL;
 FILE* fp2 = NULL;
 
 /////////////////Callbacks////////////////////////////////////////////////////////////////////////////
-void __transaction_header_cb(http_transaction_h transaction, char *header, size_t header_len, void *user_data)
+void __transaction_header_cb(http_transaction_h transaction, char *header, size_t header_len, bool auth_req, void *user_data)
 {
 	PRG("transaction_header_cb", transaction);
 }

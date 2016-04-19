@@ -177,15 +177,31 @@ typedef enum {
 } http_status_code_e;
 
 /**
+ * @brief Enumeration for the http authentication schemes.
+ * @since_tizen 3.0
+ */
+typedef enum {
+	HTTP_AUTH_NONE = 0,             /**< No authentication type */
+	HTTP_AUTH_PROXY_BASIC = 1,      /**< The authentication type is Proxy Basic Authentication */
+	HTTP_AUTH_PROXY_MD5 = 2,        /**< The authentication type is Proxy Digest Authentication */
+	HTTP_AUTH_WWW_BASIC = 3,        /**< The authentication Type is HTTP Basic Authentication */
+	HTTP_AUTH_WWW_MD5 = 4,          /**< The authentication type is HTTP Digest Authentication */
+	HTTP_AUTH_PROXY_NTLM = 5,       /**< The authentication type is Proxy NTLM Authentication */
+	HTTP_AUTH_WWW_NTLM = 7,         /**< The authentication type is NTLM Authentication */
+	HTTP_AUTH_WWW_NEGOTIATE = 8     /**< The authentication type is Negotiate Authentication */
+} http_auth_scheme;
+
+/**
  * @brief Called when the http header is received.
  * @since_tizen 3.0
  * @param[in]  http_transaction The http transaction handle
  * @param[in]  header  			The header information of Http Transaction
  * @param[in]  header_len  		The length of the Http Transaction header
+ * @param[in]  auth_req  set to true if the transaction requires authentication
  * @param[in]  user_data  		The user data
  * @see http_transaction_set_received_header_cb()
  */
-typedef void (*http_transaction_header_cb)(http_transaction_h http_transaction, char *header, size_t header_len, void *user_data);
+typedef void (*http_transaction_header_cb)(http_transaction_h http_transaction, char *header, size_t header_len, bool auth_req, void *user_data);
 
 /**
  * @brief Called when the http response is received.
@@ -373,7 +389,7 @@ int http_session_get_active_transaction_count(http_session_h http_session, int *
  */
 int http_session_get_max_transaction_count(http_session_h http_session, int *transaction_count);
 
-/*
+/**
  * @brief Destroys all transaction.
  * @since_tizen 3.0
  * @param[in]  http_session  The http session handle
@@ -419,7 +435,7 @@ int http_transaction_submit(http_transaction_h http_transaction);
  */
 int http_transaction_destroy(http_transaction_h http_transaction);
 
-/*
+/**
  * @brief Registers callback called when receive header.
  * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
@@ -432,7 +448,7 @@ int http_transaction_destroy(http_transaction_h http_transaction);
  */
 int http_transaction_set_received_header_cb(http_transaction_h http_transaction, http_transaction_header_cb header_cb, void* user_data);
 
-/*
+/**
  * @brief Registers callback called when receive body.
  * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
@@ -445,7 +461,7 @@ int http_transaction_set_received_header_cb(http_transaction_h http_transaction,
  */
 int http_transaction_set_received_body_cb(http_transaction_h http_transaction, http_transaction_body_cb body_cb, void* user_data);
 
-/*
+/**
  * @brief Registers callback called when write data.
  * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
@@ -458,7 +474,7 @@ int http_transaction_set_received_body_cb(http_transaction_h http_transaction, h
  */
 int http_transaction_set_uploaded_cb(http_transaction_h http_transaction, http_transaction_write_cb write_cb, void* user_data);
 
-/*
+/**
  * @brief Registers callback called when transaction is completed.
  * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
@@ -471,7 +487,7 @@ int http_transaction_set_uploaded_cb(http_transaction_h http_transaction, http_t
  */
 int http_transaction_set_completed_cb(http_transaction_h http_transaction, http_transaction_completed_cb completed_cb, void* user_data);
 
-/*
+/**
  * @brief Registers callback called when transaction is aborted.
  * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
@@ -483,7 +499,6 @@ int http_transaction_set_completed_cb(http_transaction_h http_transaction, http_
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_set_aborted_cb(http_transaction_h http_http_transaction, http_transaction_aborted_cb aborted_cb, void* user_data);
-
 
 /**
  * @brief Registers the progress callbacks.
@@ -654,6 +669,75 @@ int http_transaction_header_remove_field(http_transaction_h http_transaction, co
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_header_get_field_value(http_transaction_h http_transaction, const char *field_name, char **field_value);
+
+/**
+ * @brief Sets an HTTP crendentials.
+ * @details Set an HTTP authentication scheme such as username and password.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  user_name		 The http user name
+ * @param[in]  password			 The http password
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_set_credentials(http_transaction_h http_transaction, const char *user_name, const char *password);
+
+/**
+ * @brief Gets the username & password for the http credential.
+ * @since_tizen 3.0
+ * @remarks The @a field_value should be freed using free().
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[out]  user_name  		 The http credential user name
+ * @param[out] password  	 The http credential password
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_get_credentials(http_transaction_h http_transaction, char **user_name, char **password);
+
+/**
+ * @brief Sets an HTTP authentication scheme.
+ * @details Set an HTTP authentication scheme such as BASIC, MD5, NTLM and etc.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  auth_scheme			 The http authentication scheme
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_set_http_auth_scheme(http_transaction_h http_transaction, http_auth_scheme auth_scheme);
+
+/**
+ * @brief Gets the Http authentication scheme.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[out] auth_scheme  	 The http auth scheme value
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_get_http_auth_scheme(http_transaction_h http_transaction, http_auth_scheme *auth_scheme);
+
+/**
+ * @brief Gets the Http authentication realm.
+ * @since_tizen 3.0
+ * @remarks The @a field_value should be freed using free().
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[out] realm  	 The http realm value
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_get_realm(http_transaction_h http_transaction, char **realm);
 
 /**
  * @}
