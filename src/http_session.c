@@ -85,7 +85,7 @@ gboolean timer_expired_callback(gpointer user_data)
 
 	ret = curl_multi_socket_action(session->multi_handle, CURL_SOCKET_TIMEOUT, 0, &(session->still_running));
 	if (ret == CURLM_OK)
-		/* DBG("CURLM_OK - Called curl_multi_socket_action()\n"); */
+		DBG("CURLM_OK - Called curl_multi_socket_action()\n");
 	else
 		print_curl_multi_errorCode(ret);
 
@@ -104,7 +104,7 @@ gboolean _handle_event(int fd, int action, gpointer user_data)
 
 	ret = curl_multi_socket_action(session->multi_handle, fd, action, &running_handles);
 	if (ret == CURLM_OK)
-		/* DBG("CURLM_OK: Called curl_multi_socket_action(%d)\n", action); */
+		DBG("CURLM_OK: Called curl_multi_socket_action(%d)\n", action);
 	else
 		print_curl_multi_errorCode(ret);
 
