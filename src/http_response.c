@@ -60,7 +60,26 @@ void __parse_response_header(char *buffer, size_t written, gpointer user_data)
 		response->status_code = __convert_status_code(status_code);
 		response->status_text = g_strndup(start, end - start);
 
-		DBG("[Seonah] reason_pharse: %s", response->status_text);
+		DBG("reason_pharse: %s", response->status_text);
+	} else {
+		gchar *field_name = NULL;
+		gchar *field_value = NULL;
+		gchar *curpos = NULL;
+		int pos = 0, len = 0;
+
+		len = strlen(buffer);
+		curpos = strchr(buffer, ':');
+		if (curpos == NULL) {
+			return;
+		}
+		pos = curpos - buffer + 1;
+
+		field_name = parse_values(buffer, 0, pos - 1);
+		field_value = parse_values(buffer, pos + 1, len);
+
+		http_transaction_header_add_field(transaction, field_name, field_value);
+		free(field_name);
+		free(field_value);
 	}
 }
 
