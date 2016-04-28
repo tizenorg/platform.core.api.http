@@ -21,6 +21,7 @@ void _check_curl_multi_status(gpointer user_data)
 {
 	__http_transaction_h *transaction = NULL;
 	__http_session_h *session = (__http_session_h *)user_data;
+	__http_header_h *header = NULL;
 
 	CURLMsg* message = NULL;
 	int count = 0;
@@ -37,12 +38,44 @@ void _check_curl_multi_status(gpointer user_data)
 			curl_easy_getinfo(curl_easy, CURLINFO_PRIVATE, &transaction);
 			curl_easy_getinfo(curl_easy, CURLINFO_EFFECTIVE_URL, &url);
 
+			header = transaction->header;
+
 			DBG("Completed -%s: result(%d)\n", url, curl_code);
 
 			switch (curl_code) {
 			case CURLE_OK:
-				if (transaction->completed_cb)
-					transaction->completed_cb(transaction, transaction->completed_user_data);
+
+			if (!transaction->header_event) {
+				long http_auth = _CURL_HTTP_AUTH_NONE;
+				long proxy_auth = _CURL_HTTP_AUTH_NONE;
+				http_status_code_e status = 0;
+				bool auth_req = FALSE;
+				bool proxy = FALSE;
+
+				http_transaction_response_get_status_code(transaction, &status);
+				DBG("Status(%d)\n", status);
+
+				if (status == HTTP_STATUS_UNAUTHORIZED || status == HTTP_STATUS_PROXY_AUTHENTICATION_REQUIRED) {
+
+					transaction->auth_required = auth_req = TRUE;
+
+					curl_easy_getinfo(transaction->easy_handle, CURLINFO_HTTPAUTH_AVAIL, &http_auth);
+					curl_easy_getinfo(transaction->easy_handle, CURLINFO_PROXYAUTH_AVAIL, &proxy_auth);
+
+					if (proxy_auth != _CURL_HTTP_AUTH_NONE)
+						proxy = TRUE;
+
+					http_auth_scheme auth_scheme = _get_http_auth_scheme(proxy, http_auth);
+					http_transaction_set_http_auth_scheme(transaction, auth_scheme);
+				}
+
+				transaction->header_event = TRUE;
+				transaction->header_cb(transaction, header->rsp_header, header->rsp_header_len, auth_req, transaction->header_user_data);
+			}
+
+			if (transaction->completed_cb)
+				transaction->completed_cb(transaction, transaction->completed_user_data);
+
 				break;
 			case CURLE_COULDNT_RESOLVE_HOST:
 				if (transaction->aborted_cb)
