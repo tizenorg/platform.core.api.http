@@ -53,10 +53,20 @@ curl_socket_t __handle_opensocket_cb(void *client_fd, curlsocktype purpose, stru
 size_t __handle_header_cb(char *buffer, size_t size, size_t nmemb, gpointer user_data)
 {
 	__http_transaction_h *transaction = (__http_transaction_h *)user_data;
+	__http_header_h *header = transaction->header;
+
 	size_t written = size * nmemb;
+	size_t new_len = header->rsp_header_len + written;
+
+	header->rsp_header = realloc(header->rsp_header, new_len + 1);
+	if (header->rsp_header == NULL) {
+		DBG("realloc() failed\n");
+	}
+	memcpy(header->rsp_header + header->rsp_header_len, buffer, written);
+	header->rsp_header[new_len] = '\0';
+	header->rsp_header_len = new_len;
 
 	__parse_response_header(buffer, written, user_data);
-	transaction->header_cb(transaction, buffer, written, transaction->header_user_data);
 
 	return written;
 }
@@ -64,7 +74,37 @@ size_t __handle_header_cb(char *buffer, size_t size, size_t nmemb, gpointer user
 size_t __handle_body_cb(char *ptr, size_t size, size_t nmemb, gpointer user_data)
 {
 	__http_transaction_h *transaction = (__http_transaction_h *)user_data;
+	__http_header_h *header = transaction->header;
 	size_t written = size * nmemb;
+
+	if (!transaction->header_event) {
+
+		long http_auth = _CURL_HTTP_AUTH_NONE;
+		long proxy_auth = _CURL_HTTP_AUTH_NONE;
+		http_status_code_e status = 0;
+		bool auth_req = FALSE;
+		bool proxy = FALSE;
+
+		http_transaction_response_get_status_code(transaction, &status);
+		DBG("Status(%d)\n", status);
+
+		if (status == HTTP_STATUS_UNAUTHORIZED || status == HTTP_STATUS_PROXY_AUTHENTICATION_REQUIRED) {
+
+			transaction->auth_required = auth_req = TRUE;
+
+			curl_easy_getinfo(transaction->easy_handle, CURLINFO_HTTPAUTH_AVAIL, &http_auth);
+			curl_easy_getinfo(transaction->easy_handle, CURLINFO_PROXYAUTH_AVAIL, &proxy_auth);
+
+			if (proxy_auth != _CURL_HTTP_AUTH_NONE)
+				proxy = TRUE;
+
+			http_auth_scheme auth_scheme = _get_http_auth_scheme(proxy, http_auth);
+			http_transaction_set_http_auth_scheme(transaction, auth_scheme);
+		}
+
+		transaction->header_event = TRUE;
+		transaction->header_cb(transaction, header->rsp_header, header->rsp_header_len, auth_req, transaction->header_user_data);
+	}
 
 	transaction->body_cb(transaction, ptr, size, nmemb, transaction->body_user_data);
 
@@ -131,8 +171,10 @@ int _transaction_submit(gpointer user_data)
 	gboolean write_event = FALSE;
 	gint body_size = 0;
 	gint content_len = 0;
+	http_auth_scheme auth_scheme = HTTP_AUTH_NONE;
 
-	transaction->easy_handle = curl_easy_init();
+	if (!transaction->easy_handle)
+		transaction->easy_handle = curl_easy_init();
 
 	if (request->http_version == HTTP_VERSION_1_0)
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
@@ -196,6 +238,36 @@ int _transaction_submit(gpointer user_data)
 	} else {
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_FOLLOWLOCATION, 0L);
 		DBG("Disabled Auto-Redirection\n");
+	}
+
+	/* Authentication */
+	if (transaction->auth_required) {
+
+		curl_http_auth_scheme curl_auth_scheme;
+		gchar *user_name = NULL;
+		gchar *password = NULL;
+		gchar *credentials = NULL;
+
+		http_transaction_get_credentials(transaction, &user_name, &password);
+		credentials = (gchar *)malloc(sizeof(gchar) * (strlen(user_name) + 1 + strlen(password) + 1));
+		sprintf(credentials, "%s:%s", (gchar*)user_name, (gchar*)password);
+		free(user_name);
+		free(password);
+
+		http_transaction_get_http_auth_scheme(transaction, &auth_scheme);
+
+		curl_auth_scheme = _get_http_curl_auth_scheme(auth_scheme);
+
+		if (transaction->proxy_auth_type) {
+
+			curl_easy_setopt(transaction->easy_handle, CURLOPT_PROXYAUTH, curl_auth_scheme);
+			curl_easy_setopt(transaction->easy_handle, CURLOPT_PROXYUSERPWD, credentials);
+
+		} else {
+			curl_easy_setopt(transaction->easy_handle, CURLOPT_HTTPAUTH, curl_auth_scheme);
+			curl_easy_setopt(transaction->easy_handle, CURLOPT_USERPWD, credentials);
+		}
+		free(credentials);
 	}
 
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_HEADERFUNCTION, __handle_header_cb);
@@ -300,6 +372,13 @@ API int http_session_open_transaction(http_session_h http_session, http_method_e
 	transaction->ca_path = g_strdup(HTTP_DEFAULT_CA_PATH);
 	transaction->error[0] = '\0';
 
+	transaction->auth_required = FALSE;
+	transaction->realm = NULL;
+	transaction->user_name = NULL;
+	transaction->password = NULL;
+	transaction->proxy_auth_type = FALSE;
+	transaction->auth_scheme = HTTP_AUTH_NONE;
+
 	transaction->header_cb = NULL;
 	transaction->body_cb = NULL;
 	transaction->write_cb = NULL;
@@ -328,6 +407,11 @@ API int http_session_open_transaction(http_session_h http_session, http_method_e
 		ERR("Fail to allocate header memory!!");
 		return HTTP_ERROR_OUT_OF_MEMORY;
 	}
+
+	transaction->header->rsp_header_len = 0;
+	transaction->header->rsp_header = malloc(transaction->header->rsp_header_len + 1);
+	transaction->header->rsp_header[0] = '\0';
+	transaction->header_event = FALSE;
 
 	transaction->request->host_uri = NULL;
 	transaction->request->method = _get_http_method(method);
@@ -406,6 +490,25 @@ API int http_transaction_destroy(http_transaction_h http_transaction)
 		}
 		transaction->error[0] = '\0';
 
+		if (transaction->user_name) {
+			free(transaction->user_name);
+			transaction->user_name = NULL;
+		}
+
+		if (transaction->password) {
+			free(transaction->password);
+			transaction->password = NULL;
+		}
+
+		if (transaction->realm) {
+			free(transaction->realm);
+			transaction->realm = NULL;
+		}
+
+		transaction->auth_required = FALSE;
+		transaction->proxy_auth_type = FALSE;
+		transaction->auth_scheme = HTTP_AUTH_NONE;
+
 		transaction->header_cb = NULL;
 		transaction->body_cb = NULL;
 		transaction->write_cb = NULL;
@@ -439,7 +542,17 @@ API int http_transaction_destroy(http_transaction_h http_transaction)
 
 			free(request);
 		}
-		free(response);
+
+		if (response) {
+
+			if (response->status_text != NULL) {
+				free(response->status_text);
+				response->status_text = NULL;
+			}
+
+			free(response);
+
+		}
 
 		if (header) {
 			if (header->header_list != NULL) {
@@ -452,6 +565,11 @@ API int http_transaction_destroy(http_transaction_h http_transaction)
 				header->hash_table = NULL;
 			}
 
+			if (header->rsp_header != NULL) {
+				free(header->rsp_header);
+				header->rsp_header = NULL;
+				header->rsp_header_len = 0;
+			}
 			free(header);
 		}
 
@@ -761,3 +879,124 @@ API int http_session_destroy_all_transactions(http_session_h http_session)
 	return HTTP_ERROR_NONE;
 }
 
+API int http_transaction_set_http_auth_scheme(http_transaction_h http_transaction, http_auth_scheme auth_scheme)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	transaction->auth_scheme = auth_scheme;
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_get_http_auth_scheme(http_transaction_h http_transaction, http_auth_scheme *auth_scheme)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(auth_scheme == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(auth_scheme) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	*auth_scheme =  transaction->auth_scheme;
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_get_realm(http_transaction_h http_transaction, char **realm)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(realm == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(realm) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	*realm = g_strdup(transaction->realm);
+	if (*realm == NULL) {
+		ERR("strdup is failed\n");
+		return HTTP_ERROR_OUT_OF_MEMORY;
+	}
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_set_credentials(http_transaction_h http_transaction, const char *user_name, const char *password)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(user_name == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(user_name) is NULL\n");
+	_retvm_if(password == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(password) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	transaction->user_name = g_strdup(user_name);
+	transaction->password = g_strdup(password);
+
+	return HTTP_ERROR_NONE;
+}
+
+API int http_transaction_get_credentials(http_transaction_h http_transaction, char **user_name, char **password)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+	_retvm_if(user_name == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(user_name) is NULL\n");
+	_retvm_if(password == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(password) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	*user_name = g_strdup(transaction->user_name);
+	if (*user_name == NULL) {
+		ERR("strdup is failed\n");
+		return HTTP_ERROR_OUT_OF_MEMORY;
+	}
+
+	*password = g_strdup(transaction->password);
+	if (*password == NULL) {
+		ERR("strdup is failed\n");
+		return HTTP_ERROR_OUT_OF_MEMORY;
+	}
+	return HTTP_ERROR_NONE;
+}
+
+int http_transaction_set_authentication_info(http_transaction_h http_transaction)
+{
+	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
+			"parameter(http_transaction) is NULL\n");
+
+	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
+
+	http_auth_scheme auth_scheme = HTTP_AUTH_NONE;
+
+	http_transaction_get_http_auth_scheme(transaction, &auth_scheme);
+
+	switch (auth_scheme) {
+	case HTTP_AUTH_PROXY_BASIC:
+	case HTTP_AUTH_PROXY_MD5:
+	case HTTP_AUTH_PROXY_NTLM:
+		http_transaction_header_get_field_value(transaction, _HTTP_PROXY_AUTHENTICATE_HEADER_NAME, &transaction->realm);
+
+		transaction->proxy_auth_type = TRUE;
+		break;
+
+	case HTTP_AUTH_WWW_BASIC:
+	case HTTP_AUTH_WWW_MD5:
+	case HTTP_AUTH_WWW_NEGOTIATE:
+	case HTTP_AUTH_WWW_NTLM:
+		http_transaction_header_get_field_value(transaction, _HTTP_WWW_AUTHENTICATE_HEADER_NAME, &transaction->realm);
+
+		transaction->proxy_auth_type = FALSE;
+		break;
+
+	default:
+		break;
+	}
+
+	return HTTP_ERROR_NONE;
+}
