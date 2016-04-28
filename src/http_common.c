@@ -106,9 +106,83 @@ gchar* _get_http_method(http_method_e method)
 	return http_method;
 }
 
+http_auth_scheme_e _get_http_auth_scheme(bool proxy_auth, curl_http_auth_scheme_e curl_auth_scheme)
+{
+	http_auth_scheme_e auth_scheme = HTTP_AUTH_NONE;
+	if (proxy_auth) {
+		switch (curl_auth_scheme) {
+		case _CURL_HTTP_AUTH_NONE:
+			auth_scheme = HTTP_AUTH_NONE;
+			break;
+		case _CURL_HTTP_AUTH_BASIC:
+			auth_scheme = HTTP_AUTH_PROXY_BASIC;
+			break;
+		case _CURL_HTTP_AUTH_DIGEST:
+			auth_scheme = HTTP_AUTH_PROXY_MD5;
+			break;
+		case _CURL_HTTP_AUTH_NTLM:
+			auth_scheme = HTTP_AUTH_PROXY_NTLM;
+			break;
+		default:
+			auth_scheme = HTTP_AUTH_NONE;
+			break;
+		}
+	} else {
+		switch (curl_auth_scheme) {
+		case _CURL_HTTP_AUTH_NONE:
+			auth_scheme = HTTP_AUTH_NONE;
+			break;
+		case _CURL_HTTP_AUTH_BASIC:
+			auth_scheme = HTTP_AUTH_WWW_BASIC;
+			break;
+		case _CURL_HTTP_AUTH_DIGEST:
+			auth_scheme = HTTP_AUTH_WWW_MD5;
+			break;
+		case _CURL_HTTP_AUTH_NTLM:
+			auth_scheme = HTTP_AUTH_WWW_NTLM;
+			break;
+		case _CURL_HTTP_AUTH_GSSNEGOTIATE:
+			auth_scheme = HTTP_AUTH_WWW_NEGOTIATE;
+			break;
+		default:
+			auth_scheme = HTTP_AUTH_NONE;
+			break;
+		}
+	}
+
+	return auth_scheme;
+}
+
+curl_http_auth_scheme_e _get_http_curl_auth_scheme(http_auth_scheme_e auth_scheme)
+{
+	curl_http_auth_scheme_e curl_auth_scheme = _CURL_HTTP_AUTH_NONE;
+	switch (auth_scheme) {
+	case HTTP_AUTH_PROXY_BASIC:
+	case HTTP_AUTH_WWW_BASIC:
+		curl_auth_scheme = _CURL_HTTP_AUTH_BASIC;
+		break;
+	case HTTP_AUTH_PROXY_MD5:
+	case HTTP_AUTH_WWW_MD5:
+		curl_auth_scheme = _CURL_HTTP_AUTH_DIGEST;
+		break;
+	case HTTP_AUTH_PROXY_NTLM:
+	case HTTP_AUTH_WWW_NTLM:
+		curl_auth_scheme = _CURL_HTTP_AUTH_NTLM;
+		break;
+	case HTTP_AUTH_WWW_NEGOTIATE:
+		curl_auth_scheme = _CURL_HTTP_AUTH_GSSNEGOTIATE;
+		break;
+	default:
+		curl_auth_scheme = _CURL_HTTP_AUTH_NONE;
+		break;
+	}
+
+	return curl_auth_scheme;
+}
+
 void print_curl_multi_errorCode(CURLMcode code)
 {
-	const char* message = NULL;
+	const gchar* message = NULL;
 	switch (code) {
 	case CURLM_CALL_MULTI_PERFORM:
 		message = "CURLM_CALL_MULTI_PERFORM";
@@ -140,6 +214,20 @@ void print_curl_multi_errorCode(CURLMcode code)
 	}
 
 	DBG("CURLMcode(%d): %s", code, message);
+}
+
+gchar* parse_values(const gchar* string, int from_index, int to_index)
+{
+	gchar* str = NULL;
+	int cur_index = to_index - from_index;
+
+	str = (gchar*) malloc(cur_index + 1);
+	memset(str, '\0', cur_index + 1);
+
+	strncpy(str, (string + from_index), cur_index);
+	str[cur_index] = '\0';
+
+	return str;
 }
 
 gchar* _get_proxy()
