@@ -19,7 +19,7 @@
 #include "http.h"
 #include "http_private.h"
 
-static int __convert_status_code(char *status_code)
+static int __convert_status_code(gchar *status_code)
 {
 	int i = 0;
 	int converted_digit = 0;
@@ -33,14 +33,14 @@ static int __convert_status_code(char *status_code)
 	return converted_status_code;
 }
 
-void __parse_response_header(char *buffer, size_t written, gpointer user_data)
+void __parse_response_header(gchar *buffer, size_t written, gpointer user_data)
 {
 	__http_transaction_h* transaction = (__http_transaction_h *)user_data;
 	__http_response_h*response = (__http_response_h *)transaction->response;
 
-	char status_code[HTTP_STATUS_CODE_SIZE] = {0, };
-	char* start = NULL;
-	char* end = NULL;
+	gchar status_code[HTTP_STATUS_CODE_SIZE] = {0, };
+	gchar* start = NULL;
+	gchar* end = NULL;
 
 	if (strncmp(buffer, "HTTP/", HTTP_PREFIX_SIZE) == 0) {
 		if (strncmp(buffer + HTTP_PREFIX_SIZE, "1.0", HTTP_VERSION_SIZE) == 0)
@@ -60,7 +60,26 @@ void __parse_response_header(char *buffer, size_t written, gpointer user_data)
 		response->status_code = __convert_status_code(status_code);
 		response->status_text = g_strndup(start, end - start);
 
-		DBG("[Seonah] reason_pharse: %s", response->status_text);
+		DBG("reason_pharse: %s", response->status_text);
+	} else {
+		gchar *field_name = NULL;
+		gchar *field_value = NULL;
+		gchar *curpos = NULL;
+		int pos = 0, len = 0;
+
+		len = strlen(buffer);
+		curpos = strchr(buffer, ':');
+		if (curpos == NULL) {
+			return;
+		}
+		pos = curpos - buffer + 1;
+
+		field_name = parse_values(buffer, 0, pos - 1);
+		field_value = parse_values(buffer, pos + 1, len);
+
+		http_transaction_header_add_field(transaction, field_name, field_value);
+		free(field_name);
+		free(field_value);
 	}
 }
 

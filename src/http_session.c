@@ -41,8 +41,33 @@ void _check_curl_multi_status(gpointer user_data)
 
 			switch (curl_code) {
 			case CURLE_OK:
-				if (transaction->completed_cb)
+
+				if (transaction->completed_cb) {
+					long http_auth = _CURL_HTTP_AUTH_NONE;
+					long proxy_auth = _CURL_HTTP_AUTH_NONE;
+					http_status_code_e status = 0;
+					bool auth_req = FALSE;
+					bool proxy = FALSE;
+
+					http_transaction_response_get_status_code(transaction, &status);
+					DBG("Status(%d)\n", status);
+
+					if (status == HTTP_STATUS_UNAUTHORIZED || status == HTTP_STATUS_PROXY_AUTHENTICATION_REQUIRED) {
+
+						transaction->auth_required = auth_req = TRUE;
+
+						curl_easy_getinfo(transaction->easy_handle, CURLINFO_HTTPAUTH_AVAIL, &http_auth);
+						curl_easy_getinfo(transaction->easy_handle, CURLINFO_PROXYAUTH_AVAIL, &proxy_auth);
+
+						if (proxy_auth != _CURL_HTTP_AUTH_NONE)
+							proxy = TRUE;
+
+						http_auth_scheme_e auth_scheme = _get_http_auth_scheme(proxy, http_auth);
+						http_transaction_set_http_auth_scheme(transaction, auth_scheme);
+					}
 					transaction->completed_cb(transaction, transaction->completed_user_data);
+				}
+
 				break;
 			case CURLE_COULDNT_RESOLVE_HOST:
 				if (transaction->aborted_cb)
@@ -195,7 +220,7 @@ int __handle_socket_cb(CURL *curl_easy, curl_socket_t fd, int action, void *user
 
 	static const char *actionstr[] = { "none", "IN", "OUT", "INOUT", "REMOVE"};
 
-	DBG("__handle_socket_cb: fd=%d easy_handle=%p action=%s ", fd, curl_easy, actionstr[action]);
+	DBG("__handle_socket_cb: fd=%d easy_handle=%p action=%s", fd, curl_easy, actionstr[action]);
 	if (action == CURL_POLL_REMOVE) {
 		DBG("CURL_POLL_REMOVE\n");
 		_remove_socket_info(sock_info);

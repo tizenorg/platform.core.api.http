@@ -89,9 +89,24 @@ static const int _HTTP_DEFAULT_HEADER_SIZE = 1024;
 static const int _MAX_HTTP_TRANSACTIONS_PER_SESSION_NORMAL = 1;
 static const int _MAX_HTTP_TRANSACTIONS_PER_SESSION_PIPE = 5;
 
+
+#define _HTTP_PROXY_AUTHENTICATE_HEADER_NAME "Proxy-Authenticate"
+#define _HTTP_WWW_AUTHENTICATE_HEADER_NAME "WWW-Authenticate"
+#define _HTTP_CONTENT_LENGTH_HEADER_NAME "Content-Length"
+
+typedef enum {
+	_CURL_HTTP_AUTH_NONE = 0,			//none
+	_CURL_HTTP_AUTH_BASIC = 1,			// The constant for basic authentication
+	_CURL_HTTP_AUTH_DIGEST = 2,			// The constant for digest authentication
+	_CURL_HTTP_AUTH_GSSNEGOTIATE = 4,	// The constant for gss-negotiate authentication
+	_CURL_HTTP_AUTH_NTLM = 8			// The constant for ntlm authentication
+} curl_http_auth_scheme_e;
+
 typedef struct {
 	struct curl_slist *header_list;
 	GHashTable *hash_table;
+	gchar *rsp_header;
+	gint rsp_header_len;
 } __http_header_h;
 
 typedef struct {
@@ -131,12 +146,22 @@ typedef struct {
 	gchar *ca_path;
 	gchar error[CURL_ERROR_SIZE];
 
+	/*Authentication Info*/
+	bool auth_required;
+	bool proxy_auth_type;
+	http_auth_scheme_e auth_scheme;
+	gchar* realm;
+	/*Credential Info*/
+	gchar* user_name;
+	gchar* password;
+
 	int socket_fd;
 	/*Transaction Callbacks and User data*/
 	http_transaction_progress_cb progress_cb;
 	void* progress_user_data;
 	http_transaction_header_cb header_cb;
 	void* header_user_data;
+	bool header_event;
 	http_transaction_body_cb body_cb;
 	void* body_user_data;
 	http_transaction_write_cb write_cb;
@@ -174,13 +199,16 @@ gchar* _get_proxy();
 struct curl_slist* _get_header_list(http_transaction_h http_transaction);
 
 int _get_request_body_size(http_transaction_h http_transaction, int *body_size);
-int _read_request_body(http_transaction_h http_transaction, char **body);
-void __parse_response_header(char *buffer, size_t written, gpointer user_data);
+int _read_request_body(http_transaction_h http_transaction, gchar **body);
+void __parse_response_header(gchar *buffer, size_t written, gpointer user_data);
 int _generate_session_id(void);
 int _generate_transaction_id(void);
 void _add_transaction_to_list(http_transaction_h http_transaction);
 void _remove_transaction_from_list(http_transaction_h http_transaction);
 void _remove_transaction_list(void);
+curl_http_auth_scheme_e _get_http_curl_auth_scheme(http_auth_scheme_e auth_scheme);
+http_auth_scheme_e _get_http_auth_scheme(bool proxy_auth, curl_http_auth_scheme_e curl_auth_scheme);
+gchar* parse_values(const gchar* string, int from_index, int to_index);
 
 #ifdef __cplusplus
  }
