@@ -19,10 +19,6 @@ IF("${CMAKE_BUILD_TYPE}" STREQUAL "Private")
 	SET(CMAKE_BUILD_TYPE "Release")
 ENDIF("${CMAKE_BUILD_TYPE}" STREQUAL "Private")
 
-IF(TIZEN_MOBILE)
-	ADD_DEFINITIONS(-DTIZEN_MOBILE)
-ENDIF(TIZEN_MOBILE)
-
 INCLUDE(FindPkgConfig)
 pkg_check_modules(${fw_name} REQUIRED ${dependents})
 FOREACH(flag ${${fw_name}_CFLAGS})
