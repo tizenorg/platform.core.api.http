@@ -35,13 +35,6 @@ export CXXFLAGS="$CXXFLAGS -DTIZEN_DEBUG_ENABLE"
 export FFLAGS="$FFLAGS -DTIZEN_DEBUG_ENABLE"
 
 %cmake -DCMAKE_BUILD_TYPE="Private" \
-%if "%{?tizen_profile_name}" == "wearable"
-	-DTIZEN_WEARABLE=1 \
-%else
-%if "%{?tizen_profile_name}" == "mobile"
-	-DTIZEN_MOBILE=1 \
-%endif
-%endif
 %ifarch %{arm}
 	-DCMAKE_BUILD_TYPE="Private" -DARCH=arm \
 %else
