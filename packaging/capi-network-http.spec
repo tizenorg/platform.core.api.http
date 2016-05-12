@@ -1,6 +1,6 @@
 Name:		capi-network-http
 Summary:	Http Framework
-Version:	0.0.4
+Version:	0.0.5
 Release:	0
 Group:		System/Network
 License:	Apache-2.0
