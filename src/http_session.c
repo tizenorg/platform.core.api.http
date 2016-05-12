@@ -273,6 +273,11 @@ API int http_session_destroy(http_session_h http_session)
 	session->still_running = 0;
 	session->auto_redirect = FALSE;
 
+	if (session->timer_event) {
+		g_source_remove(session->timer_event);
+		session->timer_event = 0;
+	}
+
 	free(session);
 
 	return HTTP_ERROR_NONE;

@@ -337,10 +337,13 @@ API int http_session_open_transaction(http_session_h http_session, http_method_e
 	transaction->request->body_queue = g_queue_new();
 	transaction->request->tot_size = 0;
 
+	transaction->response->status_text = NULL;
+
 	transaction->header->header_list = NULL;
 	transaction->header->hash_table = NULL;
 
 	transaction->thread = NULL;
+	transaction->thread_loop = NULL;
 
 	*http_transaction = (http_transaction_h)transaction;
 	_add_transaction_to_list(transaction);
@@ -439,7 +442,17 @@ API int http_transaction_destroy(http_transaction_h http_transaction)
 
 			free(request);
 		}
-		free(response);
+
+		if (response) {
+
+			if (response->status_text != NULL) {
+				free(response->status_text);
+				response->status_text = NULL;
+			}
+
+			free(response);
+
+		}
 
 		if (header) {
 			if (header->header_list != NULL) {
@@ -457,13 +470,17 @@ API int http_transaction_destroy(http_transaction_h http_transaction)
 
 		_remove_transaction_from_list(transaction);
 
-		g_main_loop_quit((GMainLoop*)transaction->thread_loop);
+		if (transaction->thread_loop != NULL) {
+			g_main_loop_quit((GMainLoop*)transaction->thread_loop);
 
-		g_main_loop_unref(transaction->thread_loop);
-		transaction->thread_loop = NULL;
+			g_main_loop_unref(transaction->thread_loop);
+			transaction->thread_loop = NULL;
+		}
 
-		g_thread_join(transaction->thread);
-		transaction->thread = NULL;
+		if (transaction->thread != NULL) {
+			g_thread_join(transaction->thread);
+			transaction->thread = NULL;
+		}
 
 		free(transaction);
 		transaction = NULL;
