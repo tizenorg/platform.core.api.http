@@ -64,7 +64,9 @@ void _check_curl_multi_status(gpointer user_data)
 				break;
 			}
 
-			curl_multi_remove_handle(session->multi_handle, curl_easy);
+			if (session->multi_handle != NULL && curl_easy != NULL) {
+				curl_multi_remove_handle(session->multi_handle, curl_easy);
+			}
 		}
 		message = curl_multi_info_read(session->multi_handle, &count);
 	}
@@ -264,16 +266,24 @@ API int http_session_destroy(http_session_h http_session)
 
 	__http_session_h *session = (__http_session_h *)http_session;
 
-	if (session->multi_handle) {
-		curl_multi_cleanup(session->multi_handle);
-		session->multi_handle = NULL;
+	if (session) {
+		if (session->multi_handle) {
+			curl_multi_cleanup(session->multi_handle);
+			session->multi_handle = NULL;
+		}
+
+		session->active_transaction_count = 0;
+		session->still_running = 0;
+		session->auto_redirect = FALSE;
+
+		if (session->timer_event) {
+			g_source_remove(session->timer_event);
+			session->timer_event = 0;
+		}
+
+		free(session);
+		session = NULL;
 	}
-
-	session->active_transaction_count = 0;
-	session->still_running = 0;
-	session->auto_redirect = FALSE;
-
-	free(session);
 
 	return HTTP_ERROR_NONE;
 }
