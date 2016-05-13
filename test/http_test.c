@@ -66,6 +66,8 @@ void __transaction_completed_cb(http_transaction_h transaction, void *user_data)
 	ret = http_transaction_destroy(transaction);
 	if (ret == HTTP_ERROR_NONE) DBG("Success to close transaction\n");
 	else DBG("Fail to close transaction\n");
+
+	transaction = NULL;
 }
 
 void __transaction_aborted_cb(http_transaction_h transaction, int reason, void *user_data)
@@ -122,6 +124,8 @@ int test_http_session_destroy(void)
 		ERR("Fail to destroy session", ret);
 		return 0;
 	}
+
+	session = NULL;
 
 	return 1;
 }

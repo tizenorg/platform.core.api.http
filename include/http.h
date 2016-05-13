@@ -298,6 +298,7 @@ int http_session_create(http_session_mode_e mode, http_session_h *http_session);
 /**
  * @brief Destroys the Http session handle.
  * @since_tizen 3.0
+ * @remarks http_session should be set to NULL after using it
  * @param[in]  http_session  The http session handle
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
@@ -381,6 +382,7 @@ int http_session_get_max_transaction_count(http_session_h http_session, int *tra
 /*
  * @brief Destroys all transaction.
  * @since_tizen 3.0
+ * @remarks All http_transactions should be set to NULL after using it
  * @param[in]  http_session  The http session handle
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
@@ -418,7 +420,7 @@ int http_transaction_submit(http_transaction_h http_transaction);
  * @brief Closes the http transaction handle.
  * @since_tizen 3.0
  * @remarks  The @a transaction is released by http_transaction_destroy().
- *			 It should be used after finishing http trasaction.
+ *			 http_transaction should be set to NULL after using it.
  * @param[in]  http_transaction  The http transaction handle
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
