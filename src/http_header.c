@@ -79,6 +79,9 @@ API int http_transaction_header_remove_field(http_transaction_h http_transaction
 	gpointer orig_key = NULL;
 	gpointer orig_value = NULL;
 
+	_retvm_if(header->hash_table == NULL, HTTP_ERROR_INVALID_OPERATION,
+			"There are no custom header\n");
+
 	g_hash_table_lookup_extended(header->hash_table, field_name, &orig_key, &orig_value);
 	if (g_hash_table_remove(header->hash_table, field_name)) {
 		if (orig_key)
