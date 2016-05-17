@@ -26,6 +26,7 @@ struct curl_slist* _get_header_list(http_transaction_h http_transaction)
 	GHashTableIter iter;
 	gpointer key = NULL;
 	gpointer value = NULL;
+	int header_len = 0;
 
 	if (!header->hash_table)
 		return NULL;
@@ -33,11 +34,14 @@ struct curl_slist* _get_header_list(http_transaction_h http_transaction)
 	g_hash_table_iter_init(&iter, header->hash_table);
 
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
-		header_str = (gchar *)malloc(sizeof(gchar) * (strlen(key) + 1 + 1 + strlen(value) + 1));
-		sprintf(header_str, "%s: %s", (gchar*)key, (gchar*)value);
+		header_len = sizeof(gchar) * (strlen(key) + 1 + 1 + strlen(value) + 1);
+		header_str = (gchar *)malloc(header_len);
+		snprintf(header_str, header_len, "%s: %s", (gchar*)key, (gchar*)value);
 		DBG("Header Field: %s\n", header_str);
 		header->header_list = curl_slist_append(header->header_list, header_str);
-		free(header_str);
+
+		if (header_str)
+			free(header_str);
 	}
 
 	return header->header_list;
