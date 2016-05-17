@@ -215,7 +215,7 @@ int test_simple_post(void)
 	http_transaction_set_ready_to_write(transaction, TRUE);
 	http_transaction_request_write_body(transaction, post_msg);
 
-	sprintf(field_value, "%d", (int)strlen(post_msg));
+	snprintf(field_value, sizeof(field_value) - 1, "%d", (int)strlen(post_msg));
 	printf("[dbg] post size (%s)\n", field_value);
 	http_transaction_header_add_field(transaction, "Content-Length", field_value);
 
