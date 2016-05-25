@@ -180,7 +180,7 @@ API int http_transaction_request_set_cookie(http_transaction_h http_transaction,
 	return HTTP_ERROR_NONE;
 }
 
-API int http_transaction_request_get_cookie(http_transaction_h http_transaction, const char **cookie)
+API int http_transaction_request_get_cookie(http_transaction_h http_transaction, char **cookie)
 {
 	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
 			"http isn't initialized");

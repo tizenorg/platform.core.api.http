@@ -457,7 +457,8 @@ int http_transaction_set_received_header_cb(http_transaction_h http_transaction,
  * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_transaction_set_received_body_cb(http_transaction_h http_transaction, http_transaction_body_cb body_cb, void* user_data);
+int http_transaction_set_received_body_cb(http_transaction_h http_transaction, 
+		http_transaction_body_cb body_cb, void* user_data);
 
 /*
  * @brief Registers callback called when write data.
@@ -821,7 +822,7 @@ int http_transaction_request_get_accept_encoding(http_transaction_h http_transac
 int http_transaction_request_set_cookie(http_transaction_h http_transaction, const char *cookie);
 
 /**
- * @brief Gets a cookie in the HTT request.
+ * @brief Gets a cookie in the HTTP request.
  * @since_tizen 3.0
  * @remarks  The @a cookie should be freed using free().
  * @param[in]  http_transaction The http transaction handle
@@ -832,7 +833,7 @@ int http_transaction_request_set_cookie(http_transaction_h http_transaction, con
  * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_transaction_request_get_cookie(http_transaction_h http_transaction, const char **cookie);
+int http_transaction_request_get_cookie(http_transaction_h http_transaction, char **cookie);
 
 /**
  * @brief Writes the request message body.
