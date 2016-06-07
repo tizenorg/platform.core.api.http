@@ -21,13 +21,13 @@
 /**
  * @ingroup CAPI_NETWORK_FRAMEWORK
  * @defgroup CAPI_NETWORK_HTTP_MODULE  HTTP
- * @brief The HTTP API provieds functions for communication with server according to HTTP protocol.
+ * @brief The HTTP API provides functions for communication with server according to HTTP protocol.
  *
  * @section CAPI_NETWORK_HTTP_MODULE_HEADER Required Header
  *   \#include <http.h>
  *
  * @section CAPI_NETWORK_HTTP_MODULE Overview
- * The HTTP API provieds functions for communication with server according to HTTP protocol.
+ * The HTTP API provides functions for communication with server according to HTTP protocol.
  * Using the HTTP APIs, you can implement features that allow the users of your application to:
  * - Manage HTTP session
  * - Manage HTTP transaction
