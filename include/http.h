@@ -195,8 +195,8 @@ typedef enum {
  * @brief Called when the http header is received.
  * @since_tizen 3.0
  * @param[in]  http_transaction The http transaction handle
- * @param[in]  header  			The header information of Http Transaction
- * @param[in]  header_len  		The length of the Http Transaction header
+ * @param[in]  header  			The header information of HTTP Transaction
+ * @param[in]  header_len  		The length of the HTTP Transaction header
  * @param[in]  user_data  		The user data
  * @see http_transaction_set_received_header_cb()
  */
@@ -206,7 +206,7 @@ typedef void (*http_transaction_header_cb)(http_transaction_h http_transaction, 
  * @brief Called when the http response is received.
  * @since_tizen 3.0
  * @param[in]  http_transaction	The http transaction handle
- * @param[in]  body				Response information of Http Transaction
+ * @param[in]  body				Response information of HTTP Transaction
  * @param[in]  size				Size in bytes of each element to be written
  * @param[in]  count			Number of elements, each one with a size of size bytes
  * @param[in]  user_data  		The user data
@@ -218,7 +218,7 @@ typedef void (*http_transaction_body_cb)(http_transaction_h http_transaction, ch
  * @brief Called when the http ready to write event is received.
  * @since_tizen 3.0
  * @param[in]  http_transaction			The http transaction handle
- * @param[in]  recommended_chunk_size 	Recommended chunk length(bytes) of the Http transaction
+ * @param[in]  recommended_chunk_size 	Recommended chunk length(bytes) of the HTTP transaction
  * @param[in]  user_data				The user data
  * @see http_transaction_set_uploaded_cb()
  */
@@ -263,7 +263,7 @@ typedef void (*http_transaction_aborted_cb)(http_transaction_h http_transaction,
 typedef void (*http_transaction_progress_cb)(http_transaction_h http_transaction, double download_total, double download_now, double upload_total, double upload_now, void *user_data);
 
 /**
- * @brief Initializes the Http module.
+ * @brief Initializes the HTTP module.
  * @since_tizen 3.0
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
@@ -274,7 +274,7 @@ typedef void (*http_transaction_progress_cb)(http_transaction_h http_transaction
 int http_init(void);
 
 /**
- * @brief Deinitializes the Http module.
+ * @brief Deinitializes the HTTP module.
  * @since_tizen 3.0
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
@@ -294,10 +294,10 @@ int http_deinit(void);
  */
 
 /**
- * @brief Creates the Http session handle.
+ * @brief Creates the HTTP session handle.
  * @since_tizen 3.0
  * @remarks The @a http_session should be released using http_session_destroy(). \
- *			Opened transactions can't be submitted after destroing session handle.
+ *			Opened transactions can't be submitted after destroying session handle.
  * @param[in]   mode            The http session mode
  * @param[out]  http_session	The http session handle
  * @return 0 on success, otherwise negative error value
@@ -311,7 +311,7 @@ int http_deinit(void);
 int http_session_create(http_session_mode_e mode, http_session_h *http_session);
 
 /**
- * @brief Destroys the Http session handle.
+ * @brief Destroys the HTTP session handle.
  * @since_tizen 3.0
  * @remarks http_session should be set to NULL after using it
  * @param[in]  http_session  The http session handle
@@ -325,7 +325,7 @@ int http_session_create(http_session_mode_e mode, http_session_h *http_session);
 int http_session_destroy(http_session_h http_session);
 
 /**
- * @brief Opens Http transaction from the Http Session.
+ * @brief Opens HTTP transaction from the HTTP Session.
  * @since_tizen 3.0
  * @remarks The @a http_transaction should be released using http_transaction_destroy().
  * @param[in]  http_session		The http session handle
@@ -417,7 +417,7 @@ int http_session_destroy_all_transactions(http_session_h http_session);
  */
 
 /**
- * @brief Submits the Http request.
+ * @brief Submits the HTTP request.
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/internet
@@ -655,7 +655,7 @@ int http_transaction_get_server_certificate_verification(http_transaction_h http
 
 /**
  * @brief Adds a named field to header.
- * @details Adds a named field, which is a <@c fieldName, @c fieldValue> pair, to the current instance of Http Transaction.
+ * @details Adds a named field, which is a <@c fieldName, @c fieldValue> pair, to the current instance of HTTP Transaction.
  * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
  * @param[in]  field_name  		 The http Header Field name
@@ -670,7 +670,7 @@ int http_transaction_header_add_field(http_transaction_h http_transaction, const
 
 /**
  * @brief Removes the named field from header.
- * @details Remove the named field, which is a <@c fieldName, @c fieldValue> pair, from the current instance of Http Transaction.
+ * @details Remove the named field, which is a <@c fieldName, @c fieldValue> pair, from the current instance of HTTP Transaction.
  * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
  * @param[in]  field_name  		 The http Header Field name
@@ -683,7 +683,7 @@ int http_transaction_header_add_field(http_transaction_h http_transaction, const
 int http_transaction_header_remove_field(http_transaction_h http_transaction, const char *field_name);
 
 /**
- * @brief Gets the Http Header Field value from custom header.
+ * @brief Gets the HTTP Header Field value from custom header.
  * @since_tizen 3.0
  * @remarks The @a field_value should be freed using free().
  * @param[in]  http_transaction  The http transaction handle
@@ -698,9 +698,9 @@ int http_transaction_header_remove_field(http_transaction_h http_transaction, co
 int http_transaction_header_get_field_value(http_transaction_h http_transaction, const char *field_name, char **field_value);
 
 /**
- * @brief Opens Http transaction with authentication information.
+ * @brief Opens HTTP transaction with authentication information.
  * @since_tizen 3.0
- * @remarks The @a http_transaction should be released using http_transaction_destroy().
+ * @remarks The @a http_auth_transaction should be released using http_transaction_destroy().
  * @param[in]  http_transaction		The http transaction handle
  * @param[out] http_auth_transaction The http transaction handle
  * @return 0 on success, otherwise negative error value
@@ -713,7 +713,7 @@ int http_transaction_header_get_field_value(http_transaction_h http_transaction,
 int http_open_authentication(http_transaction_h http_transaction, http_transaction_h *http_auth_transaction);
 
 /**
- * @brief Sets an HTTP crendentials.
+ * @brief Sets an HTTP credentials.
  * @details Set an HTTP authentication scheme such as username and password.
  * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
@@ -729,7 +729,7 @@ int http_transaction_set_credentials(http_transaction_h http_transaction, const 
 /**
  * @brief Gets the username & password for the http credential.
  * @since_tizen 3.0
- * @remarks The @a user_name & password should be freed using free().
+ * @remarks The @a user_name & @a password should be freed using free().
  * @param[in]  http_transaction  The http transaction handle
  * @param[out]  user_name  		 The http credential user name
  * @param[out] password  	 The http credential password
@@ -756,7 +756,7 @@ int http_transaction_get_credentials(http_transaction_h http_transaction, char *
 int http_transaction_set_http_auth_scheme(http_transaction_h http_transaction, http_auth_scheme_e auth_scheme);
 
 /**
- * @brief Gets the Http authentication scheme.
+ * @brief Gets the HTTP authentication scheme.
  * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
  * @param[out] auth_scheme  	 The http auth scheme value
@@ -769,7 +769,7 @@ int http_transaction_set_http_auth_scheme(http_transaction_h http_transaction, h
 int http_transaction_get_http_auth_scheme(http_transaction_h http_transaction, http_auth_scheme_e *auth_scheme);
 
 /**
- * @brief Gets the Http authentication realm.
+ * @brief Gets the HTTP authentication realm.
  * @since_tizen 3.0
  * @remarks The @a realm should be freed using free().
  * @param[in]  http_transaction  The http transaction handle
@@ -808,7 +808,7 @@ int http_transaction_get_realm(http_transaction_h http_transaction, char **realm
 int http_transaction_request_set_method(http_transaction_h http_transaction, http_method_e method);
 
 /**
- * @brief Gets the Http method from request header.
+ * @brief Gets the HTTP method from request header.
  * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
  * @param[out] method 			 The http method
@@ -835,8 +835,8 @@ int http_transaction_request_get_method(http_transaction_h http_transaction, htt
 int http_transaction_request_set_version(http_transaction_h http_transaction, http_version_e version);
 
 /**
- * @brief Gets the Http version from request header.
- * @details Get the Http version.
+ * @brief Gets the HTTP version from request header.
+ * @details Get the HTTP version.
  * @since_tizen 3.0
  * @param[in]  http_transaction The http transaction handle
  * @param[out]  version  		The http version
@@ -878,12 +878,12 @@ int http_transaction_request_set_uri(http_transaction_h http_transaction, const 
 int http_transaction_request_get_uri(http_transaction_h http_transaction, char **host_uri);
 
 /**
- * @brief Sets the Accept-Encoding header field of HttpRequest.
+ * @brief Sets the Accept-Encoding header field of HTTP Request.
  * @details The Accept-Encoding header enables automatic decompression of HTTP downloads.
  * @since_tizen 3.0
  * @remarks  If empty string is set, an Accept-Encoding header contains all supported built-in compressions.
  * @param[in]  http_transaction The http transaction handle
- * @param[in]  encoding  		The encoding algorithms (e.g. gizp, deflate)
+ * @param[in]  encoding  		The encoding algorithms (e.g. gzip, deflate)
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
@@ -893,7 +893,7 @@ int http_transaction_request_get_uri(http_transaction_h http_transaction, char *
 int http_transaction_request_set_accept_encoding(http_transaction_h http_transaction, const char *encoding);
 
 /**
- * @brief Gets the Accept-Encoding header field of HttpRequest.
+ * @brief Gets the Accept-Encoding header field of HTTP Request.
  * @since_tizen 3.0
  * @remarks  The @a encoding should be freed using free().
  * @param[in]  http_transaction The http transaction handle
@@ -959,7 +959,7 @@ int http_transaction_request_write_body(http_transaction_h http_transaction, con
  */
 
 /**
- * @brief Gets the Http status code from Http Response.
+ * @brief Gets the HTTP status code from HTTP Response.
  * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
  * @param[out] status_code 		 The http status code
@@ -972,7 +972,7 @@ int http_transaction_request_write_body(http_transaction_h http_transaction, con
 int http_transaction_response_get_status_code(http_transaction_h http_transaction, http_status_code_e *status_code);
 
 /**
- * @brief Gets the Http status text from Http Response.
+ * @brief Gets the HTTP status text from HTTP Response.
  * @since_tizen 3.0
  * @remarks  The @a status_text should be freed using free().
  * @param[in]  http_transaction  The http transaction handle
@@ -986,7 +986,7 @@ int http_transaction_response_get_status_code(http_transaction_h http_transactio
 int http_transaction_response_get_status_text(http_transaction_h http_transaction, char **status_text);
 
 /**
- * @brief Gets the Http version from Http Response.
+ * @brief Gets the HTTP version from HTTP Response.
  * @since_tizen 3.0
  * @param[in]  http_transaction  The http transaction handle
  * @param[out] version 			 The http version
