@@ -31,6 +31,7 @@ FILE* fp1 = NULL;
 FILE* fp2 = NULL;
 
 http_session_h session = NULL;
+void _register_callbacks(http_transaction_h transaction);
 
 void __transaction_header_cb(http_transaction_h transaction, char *header, size_t header_len, void *user_data)
 {
@@ -57,12 +58,31 @@ void __transaction_completed_cb(http_transaction_h transaction, void *user_data)
 	http_status_code_e status = 0;
 	int ret;
 	char *uri = NULL;
+	char id[16] = {0, };
+	char pw[16] = {0, };
 
 	ret = http_transaction_request_get_uri(transaction, &uri);
 	ret = http_transaction_response_get_status_code(transaction, &status);
+	DBG("%s - status(%d)\n", uri, status);
+	if (status == HTTP_STATUS_UNAUTHORIZED) {
+		DBG("Authentication Required\n");
+		http_transaction_h http_auth_transaction;
+		http_auth_scheme_e auth_scheme = HTTP_AUTH_NONE;
+
+		http_open_authentication(transaction, &http_auth_transaction);
+		http_transaction_get_http_auth_scheme(http_auth_transaction, &auth_scheme);
+
+		printf("User ID: ");
+		ret = scanf("%15s", id);
+		printf("Password: ");
+		ret = scanf("%15s", pw);
+
+		http_transaction_set_credentials(http_auth_transaction, id, pw);
+		_register_callbacks(http_auth_transaction);
+		http_transaction_submit(http_auth_transaction);
+	}
 
 	http_transaction_header_remove_field(transaction, "Content-Length");
-	DBG("%s - status(%d)\n", uri, status);
 	ret = http_transaction_destroy(transaction);
 	if (ret == HTTP_ERROR_NONE) DBG("Success to close transaction\n");
 	else DBG("Fail to close transaction\n");
@@ -225,6 +245,40 @@ int test_simple_post(void)
 	return 1;
 }
 
+int test_simple_authentication_get(void)
+{
+	int ret;
+	http_transaction_h transaction = NULL;
+	http_method_e method;
+	char uri[1024];
+
+	ret = http_session_open_transaction(session, HTTP_METHOD_GET, &transaction);
+	if (ret != 0) {
+		ERR("Fail to open transaction", ret);
+		return 0;
+	}
+
+	printf("Input uri for transaction: ");
+	ret = scanf("%1023s", uri);
+
+	http_transaction_request_get_method(transaction, &method);
+	ret = http_transaction_request_set_uri(transaction, uri);
+	if (ret != 0) {
+		ERR("Fail to set URI", ret);
+		return 0;
+	}
+
+	_register_callbacks(transaction);
+	ret = http_transaction_submit(transaction);
+
+	if (ret != 0) {
+		ERR("Fail to submit transaction", ret);
+		return 0;
+	}
+
+	return 1;
+}
+
 gboolean test_thread(GIOChannel *source, GIOCondition condition, gpointer data)
 {
 	int rv;
@@ -247,7 +301,8 @@ gboolean test_thread(GIOChannel *source, GIOCondition condition, gpointer data)
 		printf("5       - Simple GET\n");
 		printf("6       - Multiple GET\n");
 		printf("7       - Simple POST\n");
-		printf("8       - \n");
+		printf("8       - Simple Authentication GET\n");
+		printf("9       - \n");
 		printf("0       - Exit \n");
 		printf("ENTER  - Show options menu.......\n");
 	}
@@ -273,6 +328,9 @@ gboolean test_thread(GIOChannel *source, GIOCondition condition, gpointer data)
 		break;
 	case '7':
 		rv = test_simple_post();
+		break;
+	case '8':
+		rv = test_simple_authentication_get();
 		break;
 	}
 
