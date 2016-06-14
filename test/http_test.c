@@ -69,7 +69,7 @@ void __transaction_completed_cb(http_transaction_h transaction, void *user_data)
 		http_transaction_h http_auth_transaction;
 		http_auth_scheme_e auth_scheme = HTTP_AUTH_NONE;
 
-		http_open_authentication(transaction, &http_auth_transaction);
+		http_transaction_open_authentication(transaction, &http_auth_transaction);
 		http_transaction_get_http_auth_scheme(http_auth_transaction, &auth_scheme);
 
 		printf("User ID: ");
