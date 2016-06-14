@@ -19,9 +19,9 @@
 #define __TIZEN_NETWORK_HTTP_DOC_H__
 
 /**
- * @ingroup CAPI_NETWORK_FRAMEWORK
  * @defgroup CAPI_NETWORK_HTTP_MODULE  HTTP
  * @brief The HTTP API provides functions for communication with server according to HTTP protocol.
+ * @ingroup CAPI_NETWORK_FRAMEWORK
  *
  * @section CAPI_NETWORK_HTTP_MODULE_HEADER Required Header
  *   \#include <http.h>
@@ -39,20 +39,16 @@
  * - http://tizen.org/feature/network.internet \n
  *
  * It is recommended to design feature related codes in your application for reliability.\n
- *
  * You can check if a device supports the related features for this API by using @ref CAPI_SYSTEM_SYSTEM_INFO_MODULE, thereby controlling the procedure of your application.\n
- *
  * To ensure your application is only running on the device with specific features, please define the features in your manifest file using the manifest editor in the SDK.\n
- *
  * More details on featuring your application can be found from <a href="https://developer.tizen.org/development/getting-started/native-application/understanding-tizen-programming/application-filtering"><b>Feature List</b>.</a>
- * @ endif
  *
  */
 
 /**
- * @ingroup CAPI_NETWORK_HTTP_MODULE
  * @defgroup CAPI_NETWORK_HTTP_SESSION_MODULE  HTTP Session
  * @brief The HTTP Session API provides functions for managing HTTP session.
+ * @ingroup CAPI_NETWORK_HTTP_MODULE
  *
  * @section CAPI_NETWORK_HTTP_SESSION_MODULE_HEADER Required Header
  *   \#include <http.h>
@@ -70,20 +66,16 @@
  * - http://tizen.org/feature/network.internet \n
  *
  * It is recommended to design feature related codes in your application for reliability.\n
- *
  * You can check if a device supports the related features for this API by using @ref CAPI_SYSTEM_SYSTEM_INFO_MODULE, thereby controlling the procedure of your application.\n
- *
  * To ensure your application is only running on the device with specific features, please define the features in your manifest file using the manifest editor in the SDK.\n
- *
  * More details on featuring your application can be found from <a href="https://developer.tizen.org/development/getting-started/native-application/understanding-tizen-programming/application-filtering"><b>Feature List</b>.</a>
- * @ endif
  *
  */
 
 /**
- * @ingroup CAPI_NETWORK_HTTP_SESSION_MODULE
  * @defgroup CAPI_NETWORK_HTTP_TRANSACTION_MODULE  HTTP Transaction
  * @brief The HTTP Transaction API provides functions for managing HTTP transactions.
+ * @ingroup CAPI_NETWORK_HTTP_SESSION_MODULE
  *
  * @section CAPI_NETWORK_HTTP_TRANSACTION_MODULE_HEADER Required Header
  *   \#include <http.h>
@@ -102,20 +94,16 @@
  * - http://tizen.org/feature/network.internet \n
  *
  * It is recommended to design feature related codes in your application for reliability.\n
- *
  * You can check if a device supports the related features for this API by using @ref CAPI_SYSTEM_SYSTEM_INFO_MODULE, thereby controlling the procedure of your application.\n
- *
  * To ensure your application is only running on the device with specific features, please define the features in your manifest file using the manifest editor in the SDK.\n
- *
  * More details on featuring your application can be found from <a href="https://developer.tizen.org/development/getting-started/native-application/understanding-tizen-programming/application-filtering"><b>Feature List</b>.</a>
- * @ endif
  *
  */
 
 /**
- * @ingroup CAPI_NETWORK_HTTP_TRANSACTION_MODULE
  * @defgroup CAPI_NETWORK_HTTP_REQUEST_MODULE  HTTP Request
  * @brief It manages HTTP request.
+ * @ingroup CAPI_NETWORK_HTTP_TRANSACTION_MODULE
  *
  * @section CAPI_NETWORK_HTTP_REQUEST_MODULE_HEADER  Required Header
  *   \#include <http.h>
@@ -132,20 +120,16 @@
  * - http://tizen.org/feature/network.internet\n
  *
  * It is recommended to design feature related codes in your application for reliability.\n
- *
  * You can check if a device supports the related features for this API by using @ref CAPI_SYSTEM_SYSTEM_INFO_MODULE, thereby controlling the procedure of your application.\n
- *
  * To ensure your application is only running on the device with specific features, please define the features in your manifest file using the manifest editor in the SDK.\n
- *
  * More details on featuring your application can be found from <a href="https://developer.tizen.org/development/getting-started/native-application/understanding-tizen-programming/application-filtering"><b>Feature List</b>.</a>
- * @ endif
  *
  */
 
 /**
- * @ingroup CAPI_NETWORK_HTTP_TRANSACTION_MODULE
  * @defgroup CAPI_NETWORK_HTTP_RESPONSE_MODULE  HTTP Response
  * @brief It manages HTTP response.
+ * @ingroup CAPI_NETWORK_HTTP_TRANSACTION_MODULE
  *
  * @section CAPI_NETWORK_HTTP_RESPONSE_MODULE_HEADER  Required Header
  *   \#include <http.h>
@@ -160,20 +144,16 @@
  * - http://tizen.org/feature/network.internet \n
  *
  * It is recommended to design feature related codes in your application for reliability.\n
- *
  * You can check if a device supports the related features for this API by using @ref CAPI_SYSTEM_SYSTEM_INFO_MODULE, thereby controlling the procedure of your application.\n
- *
  * To ensure your application is only running on the device with specific features, please define the features in your manifest file using the manifest editor in the SDK.\n
- *
  * More details on featuring your application can be found from <a href="https://developer.tizen.org/development/getting-started/native-application/understanding-tizen-programming/application-filtering"><b>Feature List</b>.</a>
- * @ endif
  *
  */
 
 /**
- * @ingroup CAPI_NETWORK_HTTP_TRANSACTION_MODULE
  * @defgroup CAPI_NETWORK_HTTP_HEADER_MODULE  HTTP Header
  * @brief It manages custom header
+ * @ingroup CAPI_NETWORK_HTTP_TRANSACTION_MODULE
  *
  * @section CAPI_NETWORK_HTTP_HEADER_MODULE_HEADER  Required Header
  *   \#include <http.h>
@@ -187,13 +167,32 @@
  * - http://tizen.org/feature/network.internet \n
  *
  * It is recommended to design feature related codes in your application for reliability.\n
- *
  * You can check if a device supports the related features for this API by using @ref CAPI_SYSTEM_SYSTEM_INFO_MODULE, thereby controlling the procedure of your application.\n
- *
  * To ensure your application is only running on the device with specific features, please define the features in your manifest file using the manifest editor in the SDK.\n
- *
  * More details on featuring your application can be found from <a href="https://developer.tizen.org/development/getting-started/native-application/understanding-tizen-programming/application-filtering"><b>Feature List</b>.</a>
- * @ endif
+ *
+ */
+
+/**
+ * @defgroup CAPI_NETWORK_HTTP_AUTHENTICATION_MODULE  HTTP Authentication
+ * @brief It manages HTTP Autehntication and credential
+ * @ingroup CAPI_NETWORK_HTTP_MODULE
+ *
+ * @section CAPI_NETWORK_HTTP_AUTHENTICATION_MODULE_HEADER  Required Header
+ *   \#include <http.h>
+ *
+ * @section CAPI_NETWORK_HTTP_AUTHENTICATION_MODULE_OVERVIEW Overview
+ * It manages HTTP Autehntication and credential
+ * 
+ * @if WEARABLE
+ * @section CAPI_NETWORK_HTTP_HEADER_MODULE_FEATURE Related Features
+ * This API is related with the following features:\n
+ * - http://tizen.org/feature/network.internet \n
+ *
+ * It is recommended to design feature related codes in your application for reliability.\n
+ * You can check if a device supports the related features for this API by using @ref CAPI_SYSTEM_SYSTEM_INFO_MODULE, thereby controlling the procedure of your application.\n
+ * To ensure your application is only running on the device with specific features, please define the features in your manifest file using the manifest editor in the SDK.\n
+ * More details on featuring your application can be found from <a href="https://developer.tizen.org/development/getting-started/native-application/understanding-tizen-programming/application-filtering"><b>Feature List</b>.</a>
  *
  */
 
