@@ -403,7 +403,7 @@ int http_session_get_max_transaction_count(http_session_h http_session, int *tra
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
  * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
- * @retval  #HTTP_ERROR_OPERATION_fAILED  Operation failed
+ * @retval  #HTTP_ERROR_OPERATION_FAILED  Operation failed
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_session_destroy_all_transactions(http_session_h http_session);
@@ -420,7 +420,8 @@ int http_session_destroy_all_transactions(http_session_h http_session);
  * @brief Submits the HTTP request.
  * @since_tizen 3.0
  * @privlevel public
- * @privilege %http://tizen.org/privilege/internet
+ * @privilege %http://tizen.org/privilege/internet \n
+ *				%http://tizen.org/privilege/network.get
  * @param[in]  http_transaction  The http transaction handle
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
@@ -514,7 +515,7 @@ int http_transaction_set_completed_cb(http_transaction_h http_transaction, http_
  * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
-int http_transaction_set_aborted_cb(http_transaction_h http_http_transaction, http_transaction_aborted_cb aborted_cb, void* user_data);
+int http_transaction_set_aborted_cb(http_transaction_h http_transaction, http_transaction_aborted_cb aborted_cb, void* user_data);
 
 /**
  * @brief Registers the progress callbacks.
@@ -654,6 +655,15 @@ int http_transaction_set_server_certificate_verification(http_transaction_h http
 int http_transaction_get_server_certificate_verification(http_transaction_h http_transaction, bool* verify);
 
 /**
+ * @}
+ */
+
+/**
+ * @addtogroup CAPI_NETWORK_HTTP_HEADER_MODULE
+ * @{
+ */
+
+/**
  * @brief Adds a named field to header.
  * @details Adds a named field, which is a <@c fieldName, @c fieldValue> pair, to the current instance of HTTP Transaction.
  * @since_tizen 3.0
@@ -698,94 +708,9 @@ int http_transaction_header_remove_field(http_transaction_h http_transaction, co
 int http_transaction_header_get_field_value(http_transaction_h http_transaction, const char *field_name, char **field_value);
 
 /**
- * @brief Opens HTTP transaction with authentication information.
- * @since_tizen 3.0
- * @remarks The @a http_auth_transaction should be released using http_transaction_destroy().
- * @param[in]  http_transaction		The http transaction handle
- * @param[out] http_auth_transaction The http transaction handle
- * @return 0 on success, otherwise negative error value
- * @retval  #HTTP_ERROR_NONE  Successful
- * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
- * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
- * @retval  #HTTP_ERROR_OUT_OF_MEMORY  Out of memory
- * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
- */
-int http_open_authentication(http_transaction_h http_transaction, http_transaction_h *http_auth_transaction);
+  * @}
+  */
 
-/**
- * @brief Sets an HTTP credentials.
- * @details Set an HTTP authentication scheme such as username and password.
- * @since_tizen 3.0
- * @param[in]  http_transaction  The http transaction handle
- * @param[in]  user_name		 The http user name
- * @param[in]  password			 The http password
- * @return 0 on success, otherwise negative error value
- * @retval  #HTTP_ERROR_NONE  Successful
- * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
- * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
- */
-int http_transaction_set_credentials(http_transaction_h http_transaction, const char *user_name, const char *password);
-
-/**
- * @brief Gets the username & password for the http credential.
- * @since_tizen 3.0
- * @remarks The @a user_name & @a password should be freed using free().
- * @param[in]  http_transaction  The http transaction handle
- * @param[out]  user_name  		 The http credential user name
- * @param[out] password  	 The http credential password
- * @return 0 on success, otherwise negative error value
- * @retval  #HTTP_ERROR_NONE  Successful
- * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
- * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
- * @retval  #HTTP_ERROR_OUT_OF_MEMORY  Out of memory
- * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
- */
-int http_transaction_get_credentials(http_transaction_h http_transaction, char **user_name, char **password);
-
-/**
- * @brief Sets an HTTP authentication scheme.
- * @details Set an HTTP authentication scheme such as BASIC, MD5, NTLM and etc.
- * @since_tizen 3.0
- * @param[in]  http_transaction  The http transaction handle
- * @param[in]  auth_scheme			 The http authentication scheme
- * @return 0 on success, otherwise negative error value
- * @retval  #HTTP_ERROR_NONE  Successful
- * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
- * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
- */
-int http_transaction_set_http_auth_scheme(http_transaction_h http_transaction, http_auth_scheme_e auth_scheme);
-
-/**
- * @brief Gets the HTTP authentication scheme.
- * @since_tizen 3.0
- * @param[in]  http_transaction  The http transaction handle
- * @param[out] auth_scheme  	 The http auth scheme value
- * @return 0 on success, otherwise negative error value
- * @retval  #HTTP_ERROR_NONE  Successful
- * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
- * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
- * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
- */
-int http_transaction_get_http_auth_scheme(http_transaction_h http_transaction, http_auth_scheme_e *auth_scheme);
-
-/**
- * @brief Gets the HTTP authentication realm.
- * @since_tizen 3.0
- * @remarks The @a realm should be freed using free().
- * @param[in]  http_transaction  The http transaction handle
- * @param[out] realm  	 The http realm value
- * @return 0 on success, otherwise negative error value
- * @retval  #HTTP_ERROR_NONE  Successful
- * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
- * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
- * @retval  #HTTP_ERROR_OUT_OF_MEMORY  Out of memory
- * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
- */
-int http_transaction_get_realm(http_transaction_h http_transaction, char **realm);
-
-/**
- * @}
- */
 
 /**
  * @addtogroup CAPI_NETWORK_HTTP_REQUEST_MODULE
@@ -997,6 +922,101 @@ int http_transaction_response_get_status_text(http_transaction_h http_transactio
  * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
  */
 int http_transaction_response_get_version(http_transaction_h http_transaction, http_version_e *version);
+
+/**
+ * @}
+ */
+
+/**
+ * @addtogroup CAPI_NETWORK_HTTP_AUTHENTICATION_MODULE
+ * @{
+ */
+
+/**
+ * @brief Opens HTTP transaction with authentication information.
+ * @since_tizen 3.0
+ * @remarks The @a http_auth_transaction should be released using http_transaction_destroy().
+ * @param[in]  http_transaction		The http transaction handle
+ * @param[out] http_auth_transaction The http transaction handle
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
+ * @retval  #HTTP_ERROR_OUT_OF_MEMORY  Out of memory
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_open_authentication(http_transaction_h http_transaction, http_transaction_h *http_auth_transaction);
+
+/**
+ * @brief Sets an HTTP credentials.
+ * @details Set an HTTP authentication scheme such as username and password.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  user_name		 The http user name
+ * @param[in]  password			 The http password
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_set_credentials(http_transaction_h http_transaction, const char *user_name, const char *password);
+
+/**
+ * @brief Gets the username & password for the http credential.
+ * @since_tizen 3.0
+ * @remarks The @a user_name & @a password should be freed using free().
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[out]  user_name  		 The http credential user name
+ * @param[out] password  	 The http credential password
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
+ * @retval  #HTTP_ERROR_OUT_OF_MEMORY  Out of memory
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_get_credentials(http_transaction_h http_transaction, char **user_name, char **password);
+
+/**
+ * @brief Sets an HTTP authentication scheme.
+ * @details Set an HTTP authentication scheme such as BASIC, MD5, NTLM and etc.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[in]  auth_scheme			 The http authentication scheme
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_set_http_auth_scheme(http_transaction_h http_transaction, http_auth_scheme_e auth_scheme);
+
+/**
+ * @brief Gets the HTTP authentication scheme.
+ * @since_tizen 3.0
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[out] auth_scheme  	 The http auth scheme value
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_get_http_auth_scheme(http_transaction_h http_transaction, http_auth_scheme_e *auth_scheme);
+
+/**
+ * @brief Gets the HTTP authentication realm.
+ * @since_tizen 3.0
+ * @remarks The @a realm should be freed using free().
+ * @param[in]  http_transaction  The http transaction handle
+ * @param[out] realm  	 The http realm value
+ * @return 0 on success, otherwise negative error value
+ * @retval  #HTTP_ERROR_NONE  Successful
+ * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter
+ * @retval  #HTTP_ERROR_INVALID_OPERATION  Invalid operation
+ * @retval  #HTTP_ERROR_OUT_OF_MEMORY  Out of memory
+ * @retval  #HTTP_ERROR_NOT_SUPPORTED  Not Supported
+ */
+int http_transaction_get_realm(http_transaction_h http_transaction, char **realm);
 
 /**
  * @}
