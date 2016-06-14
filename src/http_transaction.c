@@ -941,6 +941,9 @@ API int http_transaction_get_realm(http_transaction_h http_transaction, char **r
 
 	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
 
+	if (transaction->realm == NULL)
+		return HTTP_ERROR_INVALID_OPERATION;
+
 	*realm = g_strdup(transaction->realm);
 	if (*realm == NULL) {
 		ERR("strdup is failed\n");
@@ -992,7 +995,7 @@ API int http_transaction_get_credentials(http_transaction_h http_transaction, ch
 	return HTTP_ERROR_NONE;
 }
 
-API int http_open_authentication(http_transaction_h http_transaction, http_transaction_h *http_auth_transaction)
+API int http_transaction_open_authentication(http_transaction_h http_transaction, http_transaction_h *http_auth_transaction)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
