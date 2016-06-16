@@ -235,6 +235,7 @@ int _get_request_body_size(http_transaction_h http_transaction, int *body_size)
 	return HTTP_ERROR_NONE;
 }
 
+//LCOV_EXCL_START
 int _read_request_body(http_transaction_h http_transaction, char **body)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -284,3 +285,4 @@ int _read_request_body(http_transaction_h http_transaction, char **body)
 
 	return HTTP_ERROR_NONE;
 }
+//LCOV_EXCL_STOP

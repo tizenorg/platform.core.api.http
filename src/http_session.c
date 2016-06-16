@@ -96,12 +96,14 @@ void _check_curl_multi_status(gpointer user_data)
 	}
 }
 
+//LCOV_EXCL_START
 int _generate_session_id(void)
 {
 	int session_id = 0;
 
 	return session_id;
 }
+//LCOV_EXCL_STOP
 
 gboolean timer_expired_callback(gpointer user_data)
 {

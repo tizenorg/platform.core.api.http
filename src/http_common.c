@@ -106,6 +106,7 @@ gchar* _get_http_method(http_method_e method)
 	return http_method;
 }
 
+//LCOV_EXCL_START
 http_auth_scheme_e _get_http_auth_scheme(bool proxy_auth, curl_http_auth_scheme_e curl_auth_scheme)
 {
 	http_auth_scheme_e auth_scheme = HTTP_AUTH_NONE;
@@ -215,6 +216,7 @@ void print_curl_multi_errorCode(CURLMcode code)
 
 	DBG("CURLMcode(%d): %s", code, message);
 }
+//LCOV_EXCL_STOP
 
 gchar* parse_values(const gchar* string, int from_index, int to_index)
 {

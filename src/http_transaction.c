@@ -19,6 +19,7 @@
 
 static __thread GSList *transaction_list = NULL;
 
+//LCOV_EXCL_START
 void _add_transaction_to_list(http_transaction_h http_transaction)
 {
 	transaction_list = g_slist_append(transaction_list, http_transaction);
@@ -34,6 +35,7 @@ void _remove_transaction_list(void)
 	g_slist_free_full(transaction_list, g_free);
 	transaction_list = NULL;
 }
+//LCOV_EXCL_STOP
 
 int _generate_transaction_id(void)
 {
@@ -92,6 +94,7 @@ size_t __handle_body_cb(gchar *ptr, size_t size, size_t nmemb, gpointer user_dat
 	return written;
 }
 
+//LCOV_EXCL_START
 size_t __handle_write_cb(gchar *ptr, size_t size, size_t nmemb, gpointer user_data)
 {
 	__http_transaction_h *transaction = (__http_transaction_h *)user_data;
@@ -110,6 +113,7 @@ size_t __handle_write_cb(gchar *ptr, size_t size, size_t nmemb, gpointer user_da
 
 	return body_size;
 }
+//LCOV_EXCL_STOP
 
 size_t __http_debug_received(CURL* easy_handle, curl_infotype type, gchar* byte, size_t size, void *user_data)
 {
@@ -139,6 +143,7 @@ size_t __http_debug_received(CURL* easy_handle, curl_infotype type, gchar* byte,
 	return 0;
 }
 
+//LCOV_EXCL_START
 int http_transaction_set_authentication_info(http_transaction_h http_transaction)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -174,6 +179,7 @@ int http_transaction_set_authentication_info(http_transaction_h http_transaction
 
 	return HTTP_ERROR_NONE;
 }
+//LCOV_EXCL_STOP
 
 int _transaction_submit(gpointer user_data)
 {
@@ -257,6 +263,7 @@ int _transaction_submit(gpointer user_data)
 		DBG("Disabled Auto-Redirection\n");
 	}
 
+	//LCOV_EXCL_START
 	/* Authentication */
 	if (transaction->auth_required) {
 
@@ -286,6 +293,7 @@ int _transaction_submit(gpointer user_data)
 		}
 		free(credentials);
 	}
+	//LCOV_EXCL_STOP
 
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_HEADERFUNCTION, __handle_header_cb);
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_HEADERDATA, transaction);
@@ -617,6 +625,7 @@ API int http_transaction_destroy(http_transaction_h http_transaction)
 	return HTTP_ERROR_NONE;
 }
 
+//LCOV_EXCL_START
 API int http_transaction_pause(http_transaction_h http_transaction, http_pause_type_e pause_type)
 {
 	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
@@ -656,7 +665,7 @@ API int http_transaction_resume(http_transaction_h http_transaction)
 
 	return HTTP_ERROR_NONE;
 }
-
+//LCOV_EXCL_STOP
 
 API int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_progress_cb progress_cb, void* user_data)
 {
@@ -755,19 +764,6 @@ API int http_transaction_set_aborted_cb(http_transaction_h http_transaction, htt
 	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
 
 	transaction->aborted_cb = aborted_cb;
-
-	return HTTP_ERROR_NONE;
-}
-
-API int http_transaction_unset_progress_cb(http_transaction_h http_transaction)
-{
-	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
-			"http isn't initialized");
-	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
-			"parameter(http_transaction) is NULL\n");
-
-	__http_transaction_h *transaction = (__http_transaction_h *)http_transaction;
-	transaction->progress_cb = NULL;
 
 	return HTTP_ERROR_NONE;
 }
@@ -905,7 +901,7 @@ API int http_session_destroy_all_transactions(http_session_h http_session)
 
 	return HTTP_ERROR_NONE;
 }
-
+//LCOV_EXCL_START
 API int http_transaction_set_http_auth_scheme(http_transaction_h http_transaction, http_auth_scheme_e auth_scheme)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -1105,3 +1101,4 @@ API int http_transaction_open_authentication(http_transaction_h http_transaction
 
 	return HTTP_ERROR_NONE;
 }
+//LCOV_EXCL_STOP
