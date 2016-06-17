@@ -1008,7 +1008,7 @@ int http_transaction_get_http_auth_scheme(http_transaction_h http_transaction, h
  * @since_tizen 3.0
  * @remarks The @a realm should be freed using free().
  * @param[in]  http_transaction  The http transaction handle
- * @param[out] realm  	 The http realm value
+ * @param[out] realm  	 The http authentication realm value
  * @return 0 on success, otherwise negative error value
  * @retval  #HTTP_ERROR_NONE  Successful
  * @retval  #HTTP_ERROR_INVALID_PARAMETER  Invalid parameter

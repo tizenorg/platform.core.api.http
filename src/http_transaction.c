@@ -271,27 +271,31 @@ int _transaction_submit(gpointer user_data)
 		gchar *user_name = NULL;
 		gchar *password = NULL;
 		gchar *credentials = NULL;
+		int credentials_len = 0;
 
 		http_transaction_get_credentials(transaction, &user_name, &password);
-		credentials = (gchar *)malloc(sizeof(gchar) * (strlen(user_name) + 1 + strlen(password) + 1));
-		sprintf(credentials, "%s:%s", (gchar*)user_name, (gchar*)password);
-		free(user_name);
-		free(password);
+		credentials_len = sizeof(gchar) * (strlen(user_name) + 1 + strlen(password) + 1);
+		credentials = (gchar *)malloc(credentials_len);
+		if (credentials) {
+			snprintf(credentials, credentials_len, "%s:%s", (gchar*)user_name, (gchar*)password);
+			free(user_name);
+			free(password);
 
-		http_transaction_get_http_auth_scheme(transaction, &auth_scheme);
+			http_transaction_get_http_auth_scheme(transaction, &auth_scheme);
 
-		curl_auth_scheme = _get_http_curl_auth_scheme(auth_scheme);
+			curl_auth_scheme = _get_http_curl_auth_scheme(auth_scheme);
 
-		if (transaction->proxy_auth_type) {
+			if (transaction->proxy_auth_type) {
 
-			curl_easy_setopt(transaction->easy_handle, CURLOPT_PROXYAUTH, curl_auth_scheme);
-			curl_easy_setopt(transaction->easy_handle, CURLOPT_PROXYUSERPWD, credentials);
+				curl_easy_setopt(transaction->easy_handle, CURLOPT_PROXYAUTH, curl_auth_scheme);
+				curl_easy_setopt(transaction->easy_handle, CURLOPT_PROXYUSERPWD, credentials);
 
-		} else {
-			curl_easy_setopt(transaction->easy_handle, CURLOPT_HTTPAUTH, curl_auth_scheme);
-			curl_easy_setopt(transaction->easy_handle, CURLOPT_USERPWD, credentials);
+			} else {
+				curl_easy_setopt(transaction->easy_handle, CURLOPT_HTTPAUTH, curl_auth_scheme);
+				curl_easy_setopt(transaction->easy_handle, CURLOPT_USERPWD, credentials);
+			}
+			free(credentials);
 		}
-		free(credentials);
 	}
 	//LCOV_EXCL_STOP
 
