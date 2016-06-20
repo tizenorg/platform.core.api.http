@@ -96,6 +96,13 @@ void __transaction_aborted_cb(http_transaction_h transaction, int reason, void *
 	DBG("aborted reason: %d\n", reason);
 }
 
+void __transaction_progress_cb(http_transaction_h transaction, double download_total, double download_now, double upload_total, double upload_now, void *user_data)
+{
+	PRG("__transaction_progress_cb", transaction);
+	DBG("Download ====>: DOWN(%lf/%lf)\n", download_total, download_now);
+	DBG("Upload ====>: UP(%lf/%lf)\n", upload_total, upload_now);
+}
+
 void _register_callbacks(http_transaction_h transaction)
 {
 	http_transaction_set_received_header_cb(transaction, __transaction_header_cb, NULL);
@@ -103,6 +110,7 @@ void _register_callbacks(http_transaction_h transaction)
 	http_transaction_set_uploaded_cb(transaction, __transaction_write_cb, NULL);
 	http_transaction_set_completed_cb(transaction, __transaction_completed_cb, NULL);
 	http_transaction_set_aborted_cb(transaction, __transaction_aborted_cb, NULL);
+	http_transaction_set_progress_cb(transaction, __transaction_progress_cb, NULL);
 }
 
 int test_http_init(void)

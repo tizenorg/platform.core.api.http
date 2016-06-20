@@ -143,6 +143,22 @@ size_t __http_debug_received(CURL* easy_handle, curl_infotype type, gchar* byte,
 	return 0;
 }
 
+int __progress_cb(void *user_data, double dltotal, double dlnow, double ultotal, double ulnow)
+{
+	__http_transaction_h *transaction = (__http_transaction_h *)user_data;
+
+	double total_download = dltotal;
+	double current_download = dlnow;
+	double total_upload = ultotal;
+	double current_upload = ulnow;
+
+	if (transaction->progress_cb)
+		transaction->progress_cb(transaction, total_download, current_download,
+							total_upload, current_upload, transaction->progress_user_data);
+
+	return 0;
+}
+
 //LCOV_EXCL_START
 int http_transaction_set_authentication_info(http_transaction_h http_transaction)
 {
@@ -345,6 +361,10 @@ int _transaction_submit(gpointer user_data)
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_READFUNCTION, __handle_write_cb);
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_READDATA, transaction);
 	}
+
+	curl_easy_setopt(transaction->easy_handle, CURLOPT_NOPROGRESS, FALSE);
+	curl_easy_setopt(transaction->easy_handle, CURLOPT_PROGRESSFUNCTION, __progress_cb);
+	curl_easy_setopt(transaction->easy_handle, CURLOPT_PROGRESSDATA, transaction);
 
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_VERBOSE, 1L);
 	curl_easy_setopt(transaction->easy_handle, CURLOPT_DEBUGFUNCTION, __http_debug_received);
