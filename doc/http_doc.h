@@ -26,7 +26,7 @@
  * @section CAPI_NETWORK_HTTP_MODULE_HEADER Required Header
  *   \#include <http.h>
  *
- * @section CAPI_NETWORK_HTTP_MODULE Overview
+ * @section CAPI_NETWORK_HTTP_MODULE_OVERVIEW Overview
  * The HTTP API provides functions for communication with server according to HTTP protocol.
  * Using the HTTP APIs, you can implement features that allow the users of your application to:
  * - Manage HTTP session
