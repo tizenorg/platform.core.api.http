@@ -40,7 +40,7 @@ SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed -Wl,
 aux_source_directory(src SOURCES)
 ADD_LIBRARY(${fw_name} SHARED ${SOURCES})
 
-TARGET_LINK_LIBRARIES(${fw_name} ${${fw_name}_LDFLAGS} pthread)
+TARGET_LINK_LIBRARIES(${fw_name} ${${fw_name}_LDFLAGS} pthread -lm)
 
 SET_TARGET_PROPERTIES(${fw_name} PROPERTIES SOVERSION 0.1.0)
 
