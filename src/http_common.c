@@ -19,8 +19,13 @@
 
 #include "net_connection.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <openssl/err.h>
+#include <cynara-client.h>
 
 #define MUTEX_TYPE       pthread_mutex_t
 #define MUTEX_SETUP(x)   pthread_mutex_init(&(x), NULL)
@@ -29,6 +34,8 @@
 #define MUTEX_UNLOCK(x)  pthread_mutex_unlock(&(x))
 #define THREAD_ID        pthread_self()
 
+#define SMACK_LABEL_LEN 255
+
 /* This array will store all of the mutexes available to OpenSSL. */
 static MUTEX_TYPE *mutex_buf = NULL;
 static bool is_init = false;
@@ -36,6 +43,61 @@ static bool is_init = false;
 bool _http_is_init(void)
 {
 	return is_init;
+}
+
+bool _http_check_permission(http_privilege_e _privilege)
+{
+	FILE *fd;
+
+	int ret;
+	char smack_label[SMACK_LABEL_LEN + 1];
+	char uid[10];
+	char *client_session = "";
+	char *privilege = NULL;
+
+	cynara *p_cynara;
+
+	if (CYNARA_API_SUCCESS != cynara_initialize(&p_cynara, NULL)) {
+		ERR("Failed to initialize cynara structure\n");
+		return false;
+	}
+
+	bzero(smack_label, SMACK_LABEL_LEN + 1);
+
+	/* get smack label */
+	fd = fopen("/proc/self/attr/current", "r");
+	if (fd == NULL) {
+		ERR("Failed to open /proc/self/attr/current\n");
+		return false;
+	}
+	ret = fread(smack_label, sizeof(smack_label), 1, fd);
+	fclose(fd);
+	if (ret < 0) {
+		ERR("Failed to read /proc/self/attr/current\n");
+		return false;
+	}
+
+	/* get uid */
+	snprintf(uid, sizeof(uid), "%d", getuid());
+
+	switch (_privilege) {
+		case HTTP_PRIVILEGE_INTERNET:
+			privilege = "http://tizen.org/privilege/internet";
+			break;
+		case HTTP_PRIVILEGE_NETWORK_GET:
+			privilege = "http://tizen.org/privilege/network.get";
+			break;
+		default:
+			break;
+	}
+
+	DBG("%s %s %s\n", smack_label, uid, privilege);
+
+	/* cynara check */
+	ret = cynara_check(p_cynara, smack_label, client_session, uid, privilege);
+	cynara_finish(p_cynara);
+
+	return (ret == CYNARA_API_ACCESS_ALLOWED) ? true : false;
 }
 
 static void __http_set_init(bool init)

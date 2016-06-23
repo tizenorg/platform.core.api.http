@@ -102,6 +102,12 @@ typedef enum {
 	_CURL_HTTP_AUTH_NTLM = 8			// The constant for ntlm authentication
 } curl_http_auth_scheme_e;
 
+typedef enum {
+	HTTP_PRIVILEGE_INTERNET = 0,
+	HTTP_PRIVILEGE_NETWORK_GET
+} http_privilege_e;
+
+
 typedef struct {
 	struct curl_slist *header_list;
 	GHashTable *hash_table;
@@ -193,6 +199,7 @@ typedef struct {
 
 void print_curl_multi_errorCode(CURLMcode code);
 bool _http_is_init(void);
+bool _http_check_permission(http_privilege_e);
 gchar* _get_http_method(http_method_e method);
 http_method_e _get_method(gchar* method);
 gchar* _get_proxy();

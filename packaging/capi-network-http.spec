@@ -12,6 +12,7 @@ BuildRequires:	pkgconfig(gio-2.0)
 BuildRequires:	pkgconfig(capi-network-connection)
 BuildRequires:	pkgconfig(libcurl)
 BuildRequires:	pkgconfig(openssl)
+BuildRequires:	pkgconfig(cynara-client)
 BuildRequires:	cmake
 Requires(post):		/sbin/ldconfig
 Requires(postun):	/sbin/ldconfig
