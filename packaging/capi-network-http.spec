@@ -1,6 +1,6 @@
 Name:		capi-network-http
 Summary:	Http Framework
-Version:	0.0.9
+Version:	0.0.10
 Release:	0
 Group:		System/Network
 License:	Apache-2.0
@@ -12,6 +12,7 @@ BuildRequires:	pkgconfig(gio-2.0)
 BuildRequires:	pkgconfig(capi-network-connection)
 BuildRequires:	pkgconfig(libcurl)
 BuildRequires:	pkgconfig(openssl)
+BuildRequires:	pkgconfig(cynara-client)
 BuildRequires:	cmake
 Requires(post):		/sbin/ldconfig
 Requires(postun):	/sbin/ldconfig
