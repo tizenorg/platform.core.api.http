@@ -193,6 +193,7 @@ typedef struct {
 
 void print_curl_multi_errorCode(CURLMcode code);
 bool _http_is_init(void);
+bool _http_check_permission(void);
 gchar* _get_http_method(http_method_e method);
 http_method_e _get_method(gchar* method);
 gchar* _get_proxy();

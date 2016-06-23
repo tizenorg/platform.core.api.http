@@ -486,6 +486,8 @@ API int http_session_open_transaction(http_session_h http_session, http_method_e
 
 API int http_transaction_submit(http_transaction_h http_transaction)
 {
+	_retvm_if(_http_check_permission() == false, HTTP_ERROR_PERMISSION_DENIED,
+			"Permission denied");
 	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
 			"http isn't initialized");
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,

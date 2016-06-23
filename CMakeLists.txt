@@ -9,7 +9,7 @@ SET(PREFIX ${CMAKE_INSTALL_PREFIX})
 SET(INC_DIR include)
 INCLUDE_DIRECTORIES(${INC_DIR})
 
-SET(dependents "dlog gio-2.0 gio-unix-2.0 glib-2.0 capi-base-common capi-network-connection libcurl libssl")
+SET(dependents "dlog gio-2.0 gio-unix-2.0 glib-2.0 capi-base-common capi-network-connection libcurl libssl cynara-client")
 
 IF("${CMAKE_BUILD_TYPE}" STREQUAL "")
 	SET(CMAKE_BUILD_TYPE "Release")
