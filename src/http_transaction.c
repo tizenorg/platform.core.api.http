@@ -115,7 +115,7 @@ size_t __handle_write_cb(gchar *ptr, size_t size, size_t nmemb, gpointer user_da
 }
 //LCOV_EXCL_STOP
 
-size_t __http_debug_received(CURL* easy_handle, curl_infotype type, gchar* byte, size_t size, void *user_data)
+size_t __http_debug_received(CURL *easy_handle, curl_infotype type, gchar *byte, size_t size, void *user_data)
 {
 	char log_buffer[_HTTP_DEFAULT_HEADER_SIZE];
 	int log_size = 0;

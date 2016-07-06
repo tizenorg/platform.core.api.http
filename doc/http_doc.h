@@ -32,7 +32,7 @@
  * - Manage HTTP session
  * - Manage HTTP transaction
  * - Send/Recieve HTTP request/response
- * 
+ *
  * @if WEARABLE
  * @section CAPI_NETWORK_HTTP_MODULE_FEATURE Related Features
  * This API is related with the following features:\n
@@ -60,7 +60,7 @@
  * - Create / Delete HTTP session
  * - Get activated transaction count
  * - Manage redirection
- * 
+ *
  * @if WEARABLE
  * @section CAPI_NETWORK_HTTP_SESSION_MODULE_MODULE_FEATURE Related Features
  * This API is related with the following features:\n
@@ -88,7 +88,7 @@
  * - Pause/Resume transactions
  * - Transfer HTTP request
  * - Get/Set transaction options such as interface, verification and timeout
- * 
+ *
  * @if WEARABLE
  * @section CAPI_NETWORK_HTTP_TRANSACTION_MODULE_FEATURE Related Features
  * This API is related with the following features:\n
@@ -114,7 +114,7 @@
  * - Set/Get uri, method
  * - Make body for POST/PUT Method
  * It supports other request options according to the HTTP protocol.
- * 
+ *
  * @if WEARABLE
  * @section CAPI_NETWORK_HTTP_REQUEST_MODULE_FEATURE Related Features
  * This API is related with the following features:\n
@@ -138,7 +138,7 @@
  * @section CAPI_NETWORK_HTTP_RESPONSE_MODULE_OVERVIEW Overview
  * It manages HTTP response message.
  * - Get status code and reason phrase from response message
- * 
+ *
  * @if WEARABLE
  * @section CAPI_NETWORK_HTTP_RESPONSE_MODULE_FEATURE Related Features
  * This API is related with the following features:\n
@@ -161,7 +161,7 @@
  *
  * @section CAPI_NETWORK_HTTP_HEADER_MODULE_OVERVIEW Overview
  * It manages custom header
- * 
+ *
  * @if WEARABLE
  * @section CAPI_NETWORK_HTTP_HEADER_MODULE_FEATURE Related Features
  * This API is related with the following features:\n

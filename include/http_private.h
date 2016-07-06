@@ -217,7 +217,7 @@ http_auth_scheme_e _get_http_auth_scheme(bool proxy_auth, curl_http_auth_scheme_
 gchar* parse_values(const gchar* string, int from_index, int to_index);
 
 #ifdef __cplusplus
- }
+}
 #endif
 
 #endif /* __HTTP_PRIVATE_H__ */

@@ -81,14 +81,14 @@ bool _http_check_permission(http_privilege_e _privilege)
 	snprintf(uid, sizeof(uid), "%d", getuid());
 
 	switch (_privilege) {
-		case HTTP_PRIVILEGE_INTERNET:
-			privilege = "http://tizen.org/privilege/internet";
-			break;
-		case HTTP_PRIVILEGE_NETWORK_GET:
-			privilege = "http://tizen.org/privilege/network.get";
-			break;
-		default:
-			break;
+	case HTTP_PRIVILEGE_INTERNET:
+		privilege = "http://tizen.org/privilege/internet";
+		break;
+	case HTTP_PRIVILEGE_NETWORK_GET:
+		privilege = "http://tizen.org/privilege/network.get";
+		break;
+	default:
+		break;
 	}
 
 	DBG("%s %s %s\n", smack_label, uid, privilege);
