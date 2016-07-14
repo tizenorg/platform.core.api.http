@@ -37,13 +37,6 @@ void _remove_transaction_list(void)
 }
 //LCOV_EXCL_STOP
 
-int _generate_transaction_id(void)
-{
-	int transaction_id = 0;
-
-	return transaction_id;
-}
-
 curl_socket_t __handle_opensocket_cb(void *client_fd, curlsocktype purpose, struct curl_sockaddr *address)
 {
 	int fd = socket(address->family, address->socktype, address->protocol);
@@ -159,7 +152,6 @@ int __progress_cb(void *user_data, double dltotal, double dlnow, double ultotal,
 	return 0;
 }
 
-//LCOV_EXCL_START
 int http_transaction_set_authentication_info(http_transaction_h http_transaction)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -195,7 +187,6 @@ int http_transaction_set_authentication_info(http_transaction_h http_transaction
 
 	return HTTP_ERROR_NONE;
 }
-//LCOV_EXCL_STOP
 
 int _transaction_submit(gpointer user_data)
 {
@@ -437,7 +428,6 @@ API int http_session_open_transaction(http_session_h http_session, http_method_e
 
 	transaction->session = http_session;
 	transaction->session->active_transaction_count++;
-	transaction->session_id = 0;
 
 	transaction->request = (__http_request_h *)malloc(sizeof(__http_request_h));
 	if (transaction->request == NULL) {
@@ -653,7 +643,6 @@ API int http_transaction_destroy(http_transaction_h http_transaction)
 	return HTTP_ERROR_NONE;
 }
 
-//LCOV_EXCL_START
 API int http_transaction_pause(http_transaction_h http_transaction, http_pause_type_e pause_type)
 {
 	_retvm_if(_http_is_init() == false, HTTP_ERROR_INVALID_OPERATION,
@@ -693,7 +682,6 @@ API int http_transaction_resume(http_transaction_h http_transaction)
 
 	return HTTP_ERROR_NONE;
 }
-//LCOV_EXCL_STOP
 
 API int http_transaction_set_progress_cb(http_transaction_h http_transaction, http_transaction_progress_cb progress_cb, void* user_data)
 {
@@ -917,7 +905,7 @@ API int http_session_destroy_all_transactions(http_session_h http_session)
 
 	for (list = transaction_list; list; list = list->next) {
 		__http_transaction_h *transaction = (__http_transaction_h *)list->data;
-		if (session->session_id == transaction->session_id) {
+		if (session->session_id == transaction->session->session_id) {
 			_remove_transaction_from_list(list->data);
 			ret = http_transaction_destroy((http_transaction_h) transaction);
 			if (ret != HTTP_ERROR_NONE) {
@@ -929,7 +917,7 @@ API int http_session_destroy_all_transactions(http_session_h http_session)
 
 	return HTTP_ERROR_NONE;
 }
-//LCOV_EXCL_START
+
 API int http_transaction_set_http_auth_scheme(http_transaction_h http_transaction, http_auth_scheme_e auth_scheme)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
@@ -1067,7 +1055,6 @@ API int http_transaction_open_authentication(http_transaction_h http_transaction
 
 	auth_transaction->session = transaction->session;
 	auth_transaction->session->active_transaction_count = transaction->session->active_transaction_count;
-	auth_transaction->session_id = transaction->session_id;
 
 	auth_transaction->request = (__http_request_h *)malloc(sizeof(__http_request_h));
 	if (auth_transaction->request == NULL) {
@@ -1129,4 +1116,3 @@ API int http_transaction_open_authentication(http_transaction_h http_transaction
 
 	return HTTP_ERROR_NONE;
 }
-//LCOV_EXCL_STOP

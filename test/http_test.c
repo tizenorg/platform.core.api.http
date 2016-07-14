@@ -227,7 +227,7 @@ int test_simple_post(void)
 {
 	int ret;
 	http_transaction_h transaction;
-	const char* post_msg = "name=tizen&project=capi-network-curl";
+	const char* post_msg = "name=tizen&project=capi-network-http";
 	char field_value[15];
 
 	ret = http_session_open_transaction(session, HTTP_METHOD_POST, &transaction);

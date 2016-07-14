@@ -17,6 +17,8 @@
 #include "http.h"
 #include "http_private.h"
 
+static int generated_session_id = -1;
+
 void _check_curl_multi_status(gpointer user_data)
 {
 	__http_transaction_h *transaction = NULL;
@@ -96,14 +98,15 @@ void _check_curl_multi_status(gpointer user_data)
 	}
 }
 
-//LCOV_EXCL_START
 int _generate_session_id(void)
 {
-	int session_id = 0;
+	if (generated_session_id >= INT_MAX)
+		generated_session_id = 0;
+	else
+		generated_session_id++;
 
-	return session_id;
+	return generated_session_id;
 }
-//LCOV_EXCL_STOP
 
 gboolean timer_expired_callback(gpointer user_data)
 {
