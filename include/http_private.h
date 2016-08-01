@@ -19,6 +19,7 @@
 
 #define LOG_TAG	"CAPI_NETWORK_HTTP"
 
+#include <limits.h>
 #include <string.h>
 #include <glib.h>
 #include <gio/gio.h>
@@ -89,7 +90,6 @@ static const int _HTTP_DEFAULT_HEADER_SIZE = 1024;
 static const int _MAX_HTTP_TRANSACTIONS_PER_SESSION_NORMAL = 1;
 static const int _MAX_HTTP_TRANSACTIONS_PER_SESSION_PIPE = 5;
 
-
 #define _HTTP_PROXY_AUTHENTICATE_HEADER_NAME "Proxy-Authenticate"
 #define _HTTP_WWW_AUTHENTICATE_HEADER_NAME "WWW-Authenticate"
 #define _HTTP_CONTENT_LENGTH_HEADER_NAME "Content-Length"
@@ -142,8 +142,6 @@ typedef struct {
 
 typedef struct {
 	CURL *easy_handle;
-	int session_id;
-	int transaction_id;
 	gchar *interface_name;
 	int timeout;
 	int write_event;
@@ -208,12 +206,12 @@ int _get_request_body_size(http_transaction_h http_transaction, int *body_size);
 int _read_request_body(http_transaction_h http_transaction, gchar **body);
 void __parse_response_header(gchar *buffer, size_t written, gpointer user_data);
 int _generate_session_id(void);
-int _generate_transaction_id(void);
 void _add_transaction_to_list(http_transaction_h http_transaction);
 void _remove_transaction_from_list(http_transaction_h http_transaction);
 void _remove_transaction_list(void);
 curl_http_auth_scheme_e _get_http_curl_auth_scheme(http_auth_scheme_e auth_scheme);
 http_auth_scheme_e _get_http_auth_scheme(bool proxy_auth, curl_http_auth_scheme_e curl_auth_scheme);
+int _set_authentication_info(http_transaction_h http_transaction);
 gchar* parse_values(const gchar* string, int from_index, int to_index);
 
 #ifdef __cplusplus

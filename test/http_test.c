@@ -58,6 +58,7 @@ void __transaction_completed_cb(http_transaction_h transaction, void *user_data)
 	http_status_code_e status = 0;
 	int ret;
 	char *uri = NULL;
+	char *realm = NULL;
 	char id[16] = {0, };
 	char pw[16] = {0, };
 
@@ -71,6 +72,12 @@ void __transaction_completed_cb(http_transaction_h transaction, void *user_data)
 
 		http_transaction_open_authentication(transaction, &http_auth_transaction);
 		http_transaction_get_http_auth_scheme(http_auth_transaction, &auth_scheme);
+
+		ret = http_transaction_get_realm(http_auth_transaction, &realm);
+		if (ret != HTTP_ERROR_NONE)
+			DBG("Fail to get realm\n");
+		else
+			DBG("realm (%s)", realm);
 
 		printf("User ID: ");
 		ret = scanf("%15s", id);
@@ -227,7 +234,7 @@ int test_simple_post(void)
 {
 	int ret;
 	http_transaction_h transaction;
-	const char* post_msg = "name=tizen&project=capi-network-curl";
+	const char* post_msg = "name=tizen&project=capi-network-http";
 	char field_value[15];
 
 	ret = http_session_open_transaction(session, HTTP_METHOD_POST, &transaction);

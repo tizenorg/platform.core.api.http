@@ -37,13 +37,6 @@ void _remove_transaction_list(void)
 }
 //LCOV_EXCL_STOP
 
-int _generate_transaction_id(void)
-{
-	int transaction_id = 0;
-
-	return transaction_id;
-}
-
 curl_socket_t __handle_opensocket_cb(void *client_fd, curlsocktype purpose, struct curl_sockaddr *address)
 {
 	int fd = socket(address->family, address->socktype, address->protocol);
@@ -86,10 +79,12 @@ size_t __handle_body_cb(gchar *ptr, size_t size, size_t nmemb, gpointer user_dat
 
 	if (!transaction->header_event) {
 		transaction->header_event = TRUE;
-		transaction->header_cb(transaction, header->rsp_header, header->rsp_header_len, transaction->header_user_data);
+		if (transaction->header_cb)
+			transaction->header_cb(transaction, header->rsp_header, header->rsp_header_len, transaction->header_user_data);
 	}
 
-	transaction->body_cb(transaction, ptr, size, nmemb, transaction->body_user_data);
+	if (transaction->body_cb)
+		transaction->body_cb(transaction, ptr, size, nmemb, transaction->body_user_data);
 
 	return written;
 }
@@ -102,7 +97,8 @@ size_t __handle_write_cb(gchar *ptr, size_t size, size_t nmemb, gpointer user_da
 	size_t recommended_size = size * nmemb;
 	size_t body_size = 0;
 
-	transaction->write_cb(transaction, recommended_size, transaction->write_user_data);
+	if (transaction->write_cb)
+		transaction->write_cb(transaction, recommended_size, transaction->write_user_data);
 
 	ptr = (gchar*)g_queue_pop_head(request->body_queue);
 	if (ptr == NULL) {
@@ -160,7 +156,7 @@ int __progress_cb(void *user_data, double dltotal, double dlnow, double ultotal,
 }
 
 //LCOV_EXCL_START
-int http_transaction_set_authentication_info(http_transaction_h http_transaction)
+int _set_authentication_info(http_transaction_h http_transaction)
 {
 	_retvm_if(http_transaction == NULL, HTTP_ERROR_INVALID_PARAMETER,
 			"parameter(http_transaction) is NULL\n");
@@ -338,7 +334,7 @@ int _transaction_submit(gpointer user_data)
 	_get_request_body_size(transaction, &body_size);
 
 	if (transaction->write_event) {
-		if (content_len >= 0 && content_len <= body_size)
+		if (content_len > 0 && content_len <= body_size)
 			write_event = FALSE;
 		else
 			write_event = TRUE;
@@ -358,6 +354,7 @@ int _transaction_submit(gpointer user_data)
 
 	if (write_event) {
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_POST, 1);
+		curl_easy_setopt(transaction->easy_handle, CURLOPT_POSTFIELDSIZE, body_size);
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_READFUNCTION, __handle_write_cb);
 		curl_easy_setopt(transaction->easy_handle, CURLOPT_READDATA, transaction);
 	}
@@ -437,7 +434,6 @@ API int http_session_open_transaction(http_session_h http_session, http_method_e
 
 	transaction->session = http_session;
 	transaction->session->active_transaction_count++;
-	transaction->session_id = 0;
 
 	transaction->request = (__http_request_h *)malloc(sizeof(__http_request_h));
 	if (transaction->request == NULL) {
@@ -917,7 +913,7 @@ API int http_session_destroy_all_transactions(http_session_h http_session)
 
 	for (list = transaction_list; list; list = list->next) {
 		__http_transaction_h *transaction = (__http_transaction_h *)list->data;
-		if (session->session_id == transaction->session_id) {
+		if (session->session_id == transaction->session->session_id) {
 			_remove_transaction_from_list(list->data);
 			ret = http_transaction_destroy((http_transaction_h) transaction);
 			if (ret != HTTP_ERROR_NONE) {
@@ -1046,11 +1042,13 @@ API int http_transaction_open_authentication(http_transaction_h http_transaction
 		auth_transaction->ca_path = g_strdup(transaction->ca_path);
 
 	auth_transaction->auth_required = transaction->auth_required;
-	auth_transaction->realm = NULL;
 	auth_transaction->user_name = NULL;
 	auth_transaction->password = NULL;
 	auth_transaction->proxy_auth_type = FALSE;
 	auth_transaction->auth_scheme = transaction->auth_scheme;
+	if (transaction->realm)
+		auth_transaction->realm = g_strdup(transaction->realm);
+
 	auth_transaction->write_event = FALSE;
 
 	auth_transaction->header_cb = NULL;
@@ -1067,7 +1065,6 @@ API int http_transaction_open_authentication(http_transaction_h http_transaction
 
 	auth_transaction->session = transaction->session;
 	auth_transaction->session->active_transaction_count = transaction->session->active_transaction_count;
-	auth_transaction->session_id = transaction->session_id;
 
 	auth_transaction->request = (__http_request_h *)malloc(sizeof(__http_request_h));
 	if (auth_transaction->request == NULL) {
@@ -1124,8 +1121,6 @@ API int http_transaction_open_authentication(http_transaction_h http_transaction
 
 	*http_auth_transaction = (http_transaction_h)auth_transaction;
 	_add_transaction_to_list(auth_transaction);
-
-	http_transaction_set_authentication_info((http_transaction_h)auth_transaction);
 
 	return HTTP_ERROR_NONE;
 }
